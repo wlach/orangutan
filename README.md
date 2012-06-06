@@ -1,7 +1,7 @@
-Orangatun
+Orangutan
 =========
 
-Orangatun is intended as replacement for Android's monkey/monkeyrunner tool,
+Orangutan is intended as replacement for Android's monkey/monkeyrunner tool,
 intended to overcome the following limitations:
 
 * Lack of ability to realistically simulate input events: it is difficult to
@@ -16,15 +16,15 @@ intended to overcome the following limitations:
   monkeyrunner on a device running Android 2.x.
 
 Instead of hooking into Android's java-based windowing/event system like Monkey,
-Orangatun takes a different approach: injecting events directly into the kernel
+Orangutan takes a different approach: injecting events directly into the kernel
 /dev/input system. From the point of view of the Android system, this is totally
 indistinguishable from actual touch events. Parameters such as the duration
 of a press, speed of the swipe, etc. are inferred at *run time* by the Android
 system.
 
-An additional advantage of Orangatun is that it should run/work on *any* system
+An additional advantage of Orangutan is that it should run/work on *any* system
 which provides the /dev/input interface. This means that it should be possible
-to use Orangatun on Mozilla's B2G operating system (which reuses much of Android's
+to use Orangutan on Mozilla's B2G operating system (which reuses much of Android's
 kernel and userspace functionality).
 
 # Requirements
@@ -39,7 +39,7 @@ kernel and userspace functionality).
 # Building / Installing
 
 Assuming you have installed the Android NDK, you can configure and build
-Orangatun by running:
+Orangutan by running:
 
     ./configure /path/to/android/ndk
     make
@@ -51,7 +51,7 @@ is enabled), run:
 
 # Using
 
-Orangatun currently just executes "script" files containing a sequence of
+Orangutan currently just executes "script" files containing a sequence of
 gestures. Currently the following are supported:
 
 * Drag: Simulates a drag (panning) gesture. Syntax:
