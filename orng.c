@@ -95,7 +95,7 @@ void execute_drag(int fd, int start_x, int start_y, int end_x, int end_y,
     for (i=0; i<num_steps; i++) {
       usleep(sleeptime_usec);
       write_event(fd,3,53,start_x+delta[0]*i);
-      write_event(fd,3,54,start_x+delta[1]*i);
+      write_event(fd,3,54,start_y+delta[1]*i);
       write_event(fd,0,0,0);
     }
 
