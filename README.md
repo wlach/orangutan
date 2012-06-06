@@ -86,4 +86,4 @@ For example, if your script file was '/mnt/sdcard/script' and you were
 running on a Galaxy Nexus, you would run the following command from an adb
 shell:
 
-    /system/bin/orng /dev/input/event1 /mnt/sdcard/script
+    /system/xbin/orng /dev/input/event1 /mnt/sdcard/script
