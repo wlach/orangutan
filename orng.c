@@ -57,6 +57,9 @@ struct input_event {
 
 // end <linux/input.h>
 
+#define FROYO_EVENT_PROTO 65536
+#define ICS_EVENT_PROTO 65537
+
 #define MAX_COMMAND_ARGS 16
 #define MAX_COMMAND_LEN 256
 
@@ -78,60 +81,94 @@ void write_event(int fd, int type, int code, int value)
   }
 }
 
-void execute_drag(int fd, int start_x, int start_y, int end_x, int end_y,
-                  int num_steps, int duration_msec)
+void execute_sleep(int duration_msec)
+{
+  usleep(duration_msec*1000);
+}
+
+void execute_press(int fd, int version, int x, int y)
+{
+  if (version == ICS_EVENT_PROTO) {
+    write_event(fd,3,58,90);
+    write_event(fd,3,53,x);
+    write_event(fd,3,54,y);
+    write_event(fd,0,0,0);
+  } else if (version == FROYO_EVENT_PROTO) {
+    write_event(fd,3,53,x);
+    write_event(fd,3,54,y);
+    write_event(fd,3,48,33);
+    write_event(fd,3,50,4);
+    write_event(fd,0,2,0);
+    write_event(fd,0,0,0);
+  }
+}
+
+void execute_move(int fd, int version, int x, int y)
+{
+  if (version == ICS_EVENT_PROTO) {
+      write_event(fd,3,53,x);
+      write_event(fd,3,54,y);
+      write_event(fd,0,0,0);
+  } else if (version == FROYO_EVENT_PROTO) {
+    write_event(fd,3,53,x);
+    write_event(fd,3,54,y);
+    write_event(fd,3,48,33);
+    write_event(fd,3,50,4);
+    write_event(fd,0,2,0);
+    write_event(fd,0,0,0);
+  }
+}
+
+void execute_release(int fd, int version)
+{
+  if (version == ICS_EVENT_PROTO) {
+    write_event(fd,3,58,0);
+    write_event(fd,0,0,0);
+  } else if (version == FROYO_EVENT_PROTO) {
+    write_event(fd,0,2,0);
+    write_event(fd,0,0,0);
+  }
+}
+
+void execute_drag(int fd, int version, int start_x, int start_y, int end_x,
+                  int end_y, int num_steps, int duration_msec)
 {
     int delta[] = {(end_x-start_x)/num_steps, (end_y-start_y)/num_steps};
-    int sleeptime_usec = (duration_msec * 1000 / num_steps);
+    int sleeptime = duration_msec / num_steps;
     int i;
 
     // press
-    write_event(fd,3,58,90);
-    write_event(fd,3,53,start_x);
-    write_event(fd,3,54,start_y);
-    write_event(fd,0,0,0);
+    execute_press(fd, version, start_x, start_y);
 
     // drag
     for (i=0; i<num_steps; i++) {
-      usleep(sleeptime_usec);
-      write_event(fd,3,53,start_x+delta[0]*i);
-      write_event(fd,3,54,start_y+delta[1]*i);
-      write_event(fd,0,0,0);
+      execute_sleep(sleeptime);
+      execute_move(fd, version, start_x+delta[0]*i, start_y+delta[1]*i);
     }
 
     // release
-    write_event(fd, 3,58,0);
-    write_event(fd, 0,0,0);
+    execute_release(fd, version);
 
     // wait
-    usleep(100*1000);
+    execute_sleep(100);
 }
 
-void execute_tap(int fd, int x, int y, int num_times)
+void execute_tap(int fd, int version, int x, int y, int num_times)
 {
   int i;
 
   for (i=0;i<num_times;i++) {
     // press
-    write_event(fd,3,58,90);
-    write_event(fd,3,53,x);
-    write_event(fd,3,54,y);
-    write_event(fd,0,0,0);
-    usleep(100*1000);
+    execute_press(fd, version, x, y);
+    execute_sleep(100);
 
     // release
-    write_event(fd,3,58,0);
-    write_event(fd,0,0,0);
-    usleep(100*1000);
+    execute_release(fd, version);
+    execute_sleep(100);
 
     // wait
-    usleep(100*500);
+    execute_sleep(50);
   }
-}
-
-void execute_sleep(int duration_msec)
-{
-  usleep(duration_msec*1000);
 }
 
 int main(int argc, char *argv[])
@@ -180,10 +217,10 @@ int main(int argc, char *argv[])
 
       if (strcmp(cmd, "tap") == 0) {
         assert(num_args == 3);
-        execute_tap(fd, args[0], args[1], args[2]);
+        execute_tap(fd, version, args[0], args[1], args[2]);
       } else if (strcmp(cmd, "drag") == 0) {
         assert(num_args == 6);
-        execute_drag(fd, args[0], args[1], args[2], args[3], args[4], args[5]);
+        execute_drag(fd, version, args[0], args[1], args[2], args[3], args[4], args[5]);
       } else if (strcmp(cmd, "sleep") == 0) {
         assert(num_args == 1);
         execute_sleep(args[0]);
