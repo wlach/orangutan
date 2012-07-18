@@ -1,10 +1,15 @@
 #!/bin/sh
 
 NDKROOT=$1
+ORENV=$2
 
 if [ ! $NDKROOT ]; then
-   echo "Usage: $0 /path/to/android/ndk"
+   echo "Usage: $0 /path/to/android/ndk (linux|darwin)"
    exit 1
 fi
 
-sed -e s,@NDKROOT@,$NDKROOT,g Makefile.in > Makefile
+if [ ! $ORENV ]; then
+   ORENV="linux"
+fi
+
+sed -e s,@NDKROOT@,$NDKROOT,g Makefile.in | sed -e s,@ORENV@,$ORENV,g > Makefile
