@@ -41,7 +41,13 @@ kernel and userspace functionality).
 Assuming you have installed the Android NDK, you can configure and build
 Orangutan by running:
 
-    ./configure /path/to/android/ndk
+    ./configure $PATH_TO_ANDROID_NDK
+    make
+
+For example, on my machine I downloaded and extracted the NDK to
+$HOME/opt/android-ndk-r6. So In my case I would run:
+
+    ./configure $HOME/opt/android-ndk-r6
     make
 
 To install on your device (assuming it's connected via USB and developer mode
