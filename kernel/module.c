@@ -17,6 +17,16 @@
 #include <linux/init.h>
 #include <linux/module.h>
 
+__u16 bustype = 0;
+__u16 vendor = 0;
+__u16 product = 0;
+__u16 version = 0;
+
+module_param(bustype, ushort, S_IRUGO);
+module_param(vendor, ushort, S_IRUGO);
+module_param(product, ushort, S_IRUGO);
+module_param(version, ushort, S_IRUGO);
+
 static int __init
 orng_init(void)
 {
