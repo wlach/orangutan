@@ -3,7 +3,8 @@ ifneq ($(KERNELRELEASE),)
 
 obj-m += orng.o
 
-orng-y := module.o
+orng-y := devinfo.o
+orng-y += module.o
 
 else
 
