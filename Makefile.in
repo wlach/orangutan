@@ -6,8 +6,11 @@ ACPPFLAGS := -DANDROID -DOS_ANDROID
 ACFLAGS := --sysroot $(NDKROOT)/platforms/android-9/arch-arm -fPIC -mandroid
 ALDFLAGS :=--sysroot $(NDKROOT)/platforms/android-9/arch-arm -fPIC -mandroid
 
-PROGRAMS := orng \
+PROGRAMS := mkdevinfo \
+            orng \
             su
+
+mkdevinfo_OBJECTS := mkdevinfo.o
 
 orng_OBJECTS := orng.o
 
