@@ -4,7 +4,7 @@ CFLAGS=--sysroot $(NDKROOT)/platforms/android-9/arch-arm -fPIC -mandroid -DANDRO
 
 .PHONY: push
 
-default: orng
+.DEFAULT: orng
 
 orng: orng.c
 	echo $(NDKROOT)
