@@ -2,9 +2,15 @@ NDKROOT=@NDKROOT@
 AGCC=$(NDKROOT)/toolchains/arm-linux-androideabi-4.4.3/prebuilt/linux-x86/bin/arm-linux-androideabi-gcc
 CFLAGS=--sysroot $(NDKROOT)/platforms/android-9/arch-arm -fPIC -mandroid -DANDROID -DOS_ANDROID
 
-.PHONY: push
+.PHONY: all clean push
 
-.DEFAULT: orng
+.DEFAULT: all
+
+all : orng su
+
+clean :
+	$(RM) orng
+	$(RM) su
 
 orng: orng.c
 	echo $(NDKROOT)
