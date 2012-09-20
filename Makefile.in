@@ -1,23 +1,32 @@
 NDKROOT=@NDKROOT@
+
 AGCC=$(NDKROOT)/toolchains/arm-linux-androideabi-4.4.3/prebuilt/linux-x86/bin/arm-linux-androideabi-gcc
 CFLAGS=--sysroot $(NDKROOT)/platforms/android-9/arch-arm -fPIC -mandroid -DANDROID -DOS_ANDROID
+
+PROGRAMS := orng \
+            su
+
+orng_OBJECTS := orng.o
+
+su_OBJECTS := su.o
 
 .PHONY: all clean push
 
 .DEFAULT: all
 
-all : orng su
+.SECONDEXPANSION:
+
+all : $(PROGRAMS)
 
 clean :
-	$(RM) orng
-	$(RM) su
+	$(RM) $(PROGRAMS)
+	$(RM) $(sort $(foreach prog,$(PROGRAMS),$($(prog)_OBJECTS)))
 
-orng: orng.c
-	echo $(NDKROOT)
-	$(AGCC) $(CFLAGS) $< -o $@
+%.o : %.c
+	$(AGCC) -c $(CFLAGS) $< -o $@
 
-su: su.c
-	$(AGCC) $(CFLAGS) $< -o $@
+$(PROGRAMS) : $$($$(@)_OBJECTS)
+	$(AGCC) $(CFLAGS) $^ -o $@
 
 push: orng
 	adb push orgn /mnt/sdcard
