@@ -14,7 +14,15 @@
  * limitations under the License.
  */
 
+#ifdef __KERNEL__
 #include <linux/input.h>
+#else
+
+#include "../linux_input.h"
+
+#define BITS_PER_BYTE CHAR_BIT
+
+#endif
 
 #define NBYTES_OF_NBITS(bits) \
   (((bits)/BITS_PER_BYTE) + !!((bits)%BITS_PER_BYTE))
@@ -56,5 +64,9 @@ struct orng_device_info {
   struct input_absinfo absinfo[ABS_MAX+1];
 };
 
+#ifdef __KERNEL__
+
 const struct orng_device_info *
 orng_find_device(__u16 bustype, __u16 vendor, __u16 product, __u16 version);
+
+#endif
