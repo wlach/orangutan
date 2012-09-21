@@ -14,8 +14,6 @@
  * limitations under the License.
  */
 
-#include <linux/input.h>
-
 #include <errno.h>
 #include <fcntl.h>
 #include <stdio.h>
@@ -288,9 +286,237 @@ err_ioctl:
   return NULL;
 }
 
+static void
+write_u8_buf(const char *name, const __u8 *buf, size_t len, FILE *f)
+{
+  fprintf(f, ",\n"
+             "\t\t.%s = {", name);
+
+  size_t i, j;
+  int firstcol;
+  int firstrow = 1;
+
+  for (i = 0; i < len; ++i) {
+    if (firstrow) {
+      firstrow = 0;
+    } else {
+      fprintf(f, ",");
+    }
+
+    fprintf(f, "\n\t\t\t");
+
+    firstcol = 1;
+
+    for (j = 0; (j < 8) && (i < len); ++i, ++j) {
+      if (firstcol) {
+        firstcol = 0;
+      } else {
+        fprintf(f, ", ");
+      }
+      fprintf(f, "0x%.2x", buf[i]);
+    }
+  }
+
+  fprintf(f, "\n\t\t}");
+}
+
+static void
+write_u32_buf(const char *name, const __u32 *buf, size_t len, FILE *f)
+{
+  fprintf(f, ",\n"
+             "\t\t.%s = {", name);
+
+  size_t i, j;
+  int firstcol;
+  int firstrow = 1;
+
+  for (i = 0; i < len; ++i) {
+    if (firstrow) {
+      firstrow = 0;
+    } else {
+      fprintf(f, ",");
+    }
+
+    fprintf(f, "\n\t\t\t");
+
+    firstcol = 1;
+
+    for (j = 0; (j < 8) && (i < len); ++i, ++j) {
+      if (firstcol) {
+        firstcol = 0;
+      } else {
+        fprintf(f, ", ");
+      }
+      fprintf(f, "0x%.8x", buf[i]);
+    }
+  }
+
+  fprintf(f, "\n\t\t}");
+}
+
 static const struct orng_device_info *
 write_devinfo(const struct orng_device_info *devinfo, int with_scancodes, FILE *f)
 {
+  size_t i;
+  int firstrow;
+
+  fprintf(f, "\n/*\n"
+             " * Append the output of this program to the file 'devspec.h' in\n"
+             " * orangutan's source tree, and rebuild the kernel module.\n"
+             " */\n\n");
+
+  fprintf(f, "\t{\n");
+
+  /* device identifier */
+
+  fprintf(f, "\t\t.id = {\n"
+             "\t\t\t.bustype = %lu,\n"
+             "\t\t\t.vendor = %lu,\n"
+             "\t\t\t.product = %lu,\n"
+             "\t\t\t.version = %lu\n"
+             "\t\t}", devinfo->id.bustype, devinfo->id.vendor,
+             devinfo->id.product, devinfo->id.version);
+
+  /* device name */
+
+  if (devinfo->name) {
+    fprintf(f, ",\n"
+               "\t\t.name = \"%s\"", devinfo->name);
+  }
+
+  /* physical location */
+
+  if (devinfo->phys) {
+    fprintf(f, ",\n"
+               "\t\t.phys = \"%s\"", devinfo->phys);
+  }
+
+  /* unique identifier */
+
+  if (devinfo->uniq) {
+    fprintf(f, ",\n"
+               "\t\t.uniq = \"%s\"", devinfo->uniq);
+  }
+
+  /* feature bits */
+
+  write_u8_buf("evbit", devinfo->evbit,
+               sizeof(devinfo->evbit)/sizeof(devinfo->evbit[0]), f);
+
+  if (TEST_ARRAY_BIT(devinfo->evbit, EV_KEY)) {
+    write_u8_buf("keybit", devinfo->keybit,
+                 sizeof(devinfo->keybit)/sizeof(devinfo->keybit[0]), f);
+  }
+
+  if (TEST_ARRAY_BIT(devinfo->evbit, EV_REL)) {
+    write_u8_buf("relbit", devinfo->relbit,
+                 sizeof(devinfo->relbit)/sizeof(devinfo->relbit[0]), f);
+  }
+
+  if (TEST_ARRAY_BIT(devinfo->evbit, EV_ABS)) {
+    write_u8_buf("absbit", devinfo->absbit,
+                 sizeof(devinfo->absbit)/sizeof(devinfo->absbit[0]), f);
+  }
+
+  if (TEST_ARRAY_BIT(devinfo->evbit, EV_MSC)) {
+    write_u8_buf("mscbit", devinfo->mscbit,
+                 sizeof(devinfo->mscbit)/sizeof(devinfo->mscbit[0]), f);
+  }
+
+  if (TEST_ARRAY_BIT(devinfo->evbit, EV_LED)) {
+    write_u8_buf("ledbit", devinfo->ledbit,
+                 sizeof(devinfo->ledbit)/sizeof(devinfo->ledbit[0]), f);
+  }
+
+  if (TEST_ARRAY_BIT(devinfo->evbit, EV_SND)) {
+    write_u8_buf("sndbit", devinfo->sndbit,
+                 sizeof(devinfo->sndbit)/sizeof(devinfo->sndbit[0]), f);
+  }
+
+  if (TEST_ARRAY_BIT(devinfo->evbit, EV_FF)) {
+    write_u8_buf("ffbit", devinfo->keybit,
+                 sizeof(devinfo->ffbit)/sizeof(devinfo->ffbit[0]), f);
+  }
+
+  if (TEST_ARRAY_BIT(devinfo->evbit, EV_SW)) {
+    write_u8_buf("swbit", devinfo->swbit,
+                 sizeof(devinfo->swbit)/sizeof(devinfo->swbit[0]), f);
+  }
+
+  /* auto repeat */
+
+  if (TEST_ARRAY_BIT(devinfo->evbit, EV_REP)) {
+    fprintf(f, ",\n"
+               "\t\t.rep = {\n"
+               "\t\t\t%ld, %ld\n"
+               "\t\t}", devinfo->rep[0], devinfo->rep[1]);
+  }
+
+  /* state */
+
+  if (TEST_ARRAY_BIT(devinfo->evbit, EV_KEY)) {
+    write_u8_buf("key", devinfo->key,
+                 sizeof(devinfo->key)/sizeof(devinfo->key[0]), f);
+  }
+
+  if (TEST_ARRAY_BIT(devinfo->evbit, EV_LED)) {
+    write_u8_buf("led", devinfo->led,
+                 sizeof(devinfo->led)/sizeof(devinfo->led[0]), f);
+  }
+
+  if (TEST_ARRAY_BIT(devinfo->snd, EV_SND)) {
+    write_u8_buf("snd", devinfo->snd,
+                 sizeof(devinfo->snd)/sizeof(devinfo->snd[0]), f);
+  }
+
+  if (TEST_ARRAY_BIT(devinfo->sw, EV_SW)) {
+    write_u8_buf("sw", devinfo->sw,
+                 sizeof(devinfo->sw)/sizeof(devinfo->sw[0]), f);
+  }
+
+  /* scancodes */
+
+  if (with_scancodes) {
+    if (TEST_ARRAY_BIT(devinfo->evbit, EV_KEY)) {
+      write_u32_buf("keymap", devinfo->keymap[0],
+                    sizeof(devinfo->keymap)/sizeof(devinfo->keymap[0][0]), f);
+    }
+  }
+
+  /* abs limits */
+
+  if (TEST_ARRAY_BIT(devinfo->evbit, EV_ABS)) {
+    fprintf(f, ",\n"
+               "\t\t.absinfo = {");
+    for (i = 0, firstrow = 1;
+         i < sizeof(devinfo->absinfo)/sizeof(devinfo->absinfo[0]); ++i) {
+      if (TEST_ARRAY_BIT(devinfo->absbit, i)) {
+        if (!firstrow) {
+          fprintf(f, ",");
+        }
+        fprintf(f, "\n\t\t\t[%lu] = {\n"
+                   "\t\t\t\t.value = %d,\n"
+                   "\t\t\t\t.minimum = %d,\n"
+                   "\t\t\t\t.maximum = %d,\n"
+                   "\t\t\t\t.fuzz = %d,\n"
+                   "\t\t\t\t.flat = %d,\n"
+                   "\t\t\t\t.resolution = %d\n"
+                   "\t\t\t}", (unsigned long)i,
+                   devinfo->absinfo[i].value, devinfo->absinfo[i].minimum,
+                   devinfo->absinfo[i].maximum, devinfo->absinfo[i].fuzz,
+                   devinfo->absinfo[i].flat, devinfo->absinfo[i].resolution);
+      }
+      if (firstrow) {
+        firstrow = 0;
+      }
+    }
+    fprintf(f, "\n"
+               "\t\t}");
+  }
+
+  fprintf(f, "\n"
+             "\t},\n");
+
   return devinfo;
 }
 
