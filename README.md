@@ -53,15 +53,15 @@ $HOME/opt/android-ndk-r6. So In my case I would run:
 To install on your device (assuming it's connected via USB and developer mode
 is enabled), run:
 
-   make push
+    make push
 
 If you want to use Orangutan with Eideticker, you'll need to install it in
 /system/xbin. Since this directory is normally readonly, you'll need to remount it.
 This can usually be done using something resembling the following procedure (assuming
 you already have a copy in /data):
 
-  adb shell su -c 'mount -o remount,rw /dev/block/mmcblk0p1 /system'
-  adb shell su -c 'cp /data/orng /system/xbin/orng'
+    adb shell su -c 'mount -o remount,rw /dev/block/mmcblk0p1 /system'
+    adb shell su -c 'cp /data/orng /system/xbin/orng'
 
 Exact instructions may vary depending on the phone you're working with and its
 partition layout.
