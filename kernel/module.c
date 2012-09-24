@@ -21,10 +21,14 @@
 
 #include "devinfo.h"
 
+char *name;
+
 __u16 bustype = 0;
 __u16 vendor = 0;
 __u16 product = 0;
 __u16 version = 0;
+
+module_param(name, charp, S_IRUGO);
 
 module_param(bustype, ushort, S_IRUGO);
 module_param(vendor, ushort, S_IRUGO);
@@ -250,11 +254,15 @@ orng_init(void)
   const struct orng_device_info *devinfo;
   int res;
 
-  devinfo = orng_find_device_by_id(bustype, vendor, product, version);
+  if (name) {
+    devinfo = orng_find_device_by_name(name);
+  } else {
+    devinfo = orng_find_device_by_id(bustype, vendor, product, version);
+  }
 
   if (!devinfo) {
     res = -EINVAL;
-    goto err_orng_find_device_by_id;
+    goto err_orng_find_device;
   }
 
   indev = add_device(devinfo);
@@ -267,7 +275,7 @@ orng_init(void)
   return 0;
 
 err_add_device:
-err_orng_find_device_by_id:
+err_orng_find_device:
   return res;
 }
 
