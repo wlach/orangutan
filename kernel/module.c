@@ -34,16 +34,16 @@ module_param(version, ushort, S_IRUGO);
 static struct input_dev *indev;
 
 static struct input_dev *
-orng_setup_device(struct input_dev *indev, __u16 bustype, __u16 vendor, __u16 product, __u16 version, const struct orng_device_info *devinfo)
+orng_setup_device(struct input_dev *indev, const struct orng_device_info *devinfo)
 {
   size_t i;
 
   /* device identifier */
 
-  indev->id.bustype = bustype;
-  indev->id.vendor = vendor;
-  indev->id.product = product;
-  indev->id.version = version;
+  indev->id.bustype = devinfo->id.bustype;
+  indev->id.vendor = devinfo->id.vendor;
+  indev->id.product = devinfo->id.product;
+  indev->id.version = devinfo->id.version;
 
   /* device name */
 
@@ -213,7 +213,14 @@ static int __init
 orng_init(void)
 {
   const struct orng_device_info *devinfo;
-  int res = 0;
+  int res;
+
+  devinfo = orng_find_device_by_id(bustype, vendor, product, version);
+
+  if (!devinfo) {
+    res = -EINVAL;
+    goto err_orng_find_device_by_id;
+  }
 
   indev = input_allocate_device();
 
@@ -223,13 +230,7 @@ orng_init(void)
     goto err_input_allocate_device;
   }
 
-  devinfo = orng_find_device(bustype, vendor, product, version);
-
-  if (!devinfo) {
-    panic("No device information found\n");
-  }
-
-  if (!orng_setup_device(indev, bustype, vendor, product, version, devinfo)) {
+  if (!orng_setup_device(indev, devinfo)) {
     res = -ENOMEM;
     goto err_setup_device;
   }
@@ -249,6 +250,7 @@ err_input_register_device:
 err_setup_device:
   input_free_device(indev);
 err_input_allocate_device:
+err_orng_find_device_by_id:
   return res;
 }
 

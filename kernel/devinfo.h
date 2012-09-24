@@ -67,6 +67,7 @@ struct orng_device_info {
 #ifdef __KERNEL__
 
 const struct orng_device_info *
-orng_find_device(__u16 bustype, __u16 vendor, __u16 product, __u16 version);
+orng_find_device_by_id(__u16 bustype, __u16 vendor,
+                       __u16 product, __u16 version);
 
 #endif

@@ -16,19 +16,9 @@
 
 #include "devinfo.h"
 
-static int
-id_matches(const struct input_id *id,
-           __u16 bustype, __u16 vendor,
-           __u16 product, __u16 version)
-{
-  return (id->bustype == bustype) &&
-         (id->vendor == vendor) &&
-         (id->product == product) &&
-         (id->version == version);
-}
-
 const struct orng_device_info *
-orng_find_device(__u16 bustype, __u16 vendor, __u16 product, __u16 version)
+orng_find_device(const void *param,
+                 int (*cmp)(const struct orng_device_info*, const void*))
 {
   static const struct orng_device_info devinfo[] = {
     /* All device information are in a separate file. */
@@ -74,10 +64,76 @@ orng_find_device(__u16 bustype, __u16 vendor, __u16 product, __u16 version)
   size_t i;
 
   for (i = 0; i < ARRAY_SIZE(devinfo); ++i) {
-    if (id_matches(&devinfo[i].id, bustype, vendor, product, version)) {
+    if (!cmp(devinfo+i, param)) {
       return devinfo+i;
     }
   }
 
-  return devinfo+ARRAY_SIZE(devinfo)-1;
+  return NULL;
+}
+
+static long long
+lldiff(long long lhs, long long rhs)
+{
+  return lhs - rhs;
+}
+
+static int
+llcmp(long long diff)
+{
+  /*
+   * branch-less implementation of
+   *
+   *  if (diff > 0) {
+   *    return 1;
+   *  } else if (diff < 0) {
+   *    return -1;
+   *  } else {
+   *    return 0;
+   *  }
+   */
+  return (diff > 0) - (diff < 0);
+}
+
+static int
+idcmp(const struct input_id *lhs, const struct input_id *rhs)
+{
+  int cmp = llcmp(lldiff(lhs->bustype, rhs->bustype));
+
+  if (cmp) {
+    return cmp;
+  }
+
+  cmp = llcmp(lldiff(lhs->vendor, rhs->vendor));
+
+  if (cmp) {
+    return cmp;
+  }
+
+  cmp = llcmp(lldiff(lhs->product, rhs->product));
+
+  if (cmp) {
+    return cmp;
+  }
+
+  return llcmp(lldiff(lhs->version, rhs->version));
+}
+
+static int
+idcmp_adapter(const struct orng_device_info *devinfo, const void *id)
+{
+  return idcmp(&devinfo->id, id);
+}
+
+const struct orng_device_info *
+orng_find_device_by_id(__u16 bustype, __u16 vendor, __u16 product, __u16 version)
+{
+  struct input_id id = {
+    .bustype = bustype,
+    .vendor = vendor,
+    .product = product,
+    .version = version
+  };
+
+  return orng_find_device(&id, idcmp_adapter);
 }
