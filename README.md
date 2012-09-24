@@ -53,18 +53,44 @@ $HOME/opt/android-ndk-r6. So In my case I would run:
 To install on your device (assuming it's connected via USB and developer mode
 is enabled), run:
 
-   make push
+    make push
 
 If you want to use Orangutan with Eideticker, you'll need to install it in
 /system/xbin. Since this directory is normally readonly, you'll need to remount it.
 This can usually be done using something resembling the following procedure (assuming
 you already have a copy in /data):
 
-  adb shell su -c 'mount -o remount,rw /dev/block/mmcblk0p1 /system'
-  adb shell su -c 'cp /data/orng /system/xbin/orng'
+    adb shell su -c 'mount -o remount,rw /dev/block/mmcblk0p1 /system'
+    adb shell su -c 'cp /data/orng /system/xbin/orng'
 
 Exact instructions may vary depending on the phone you're working with and its
 partition layout.
+
+# Kernel support
+
+Orangutan comes with a Linux kernel module that lets you emulate arbitrary
+input devices. The use of the module is optional.
+
+A guide on how to build kernel modules for binary-only kernels is available
+at
+
+    http://glandium.org/blog/?p=2664
+
+The resulting binary module is named 'orng.ko' and resides in the subdirectory
+'kernel/'. To copy the binary module to your device, execute
+
+    adb push kernel/orng.ko /system/orng/orng.ko
+
+and load the module with
+
+    adb shell insmod /system/orng/orng.ko <module parameter>
+
+Module parameters are either
+
+    'names' - an comma-separated list of up tp 16 device names, or
+    'bustype', 'vendor', 'product', and 'version' - a device id.
+
+Names take precedence over device ids.
 
 # Using
 
