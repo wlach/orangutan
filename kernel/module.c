@@ -209,6 +209,41 @@ err_kmalloc:
   return NULL;
 }
 
+static struct input_dev *
+add_device(const struct orng_device_info *devinfo)
+{
+  struct input_dev *indev;
+  int res;
+
+  indev = input_allocate_device();
+
+  if (!indev) {
+    printk(KERN_ERR "input_allocate_device failed");
+    goto err_input_allocate_device;
+  }
+
+  if (!orng_setup_device(indev, devinfo)) {
+    goto err_setup_device;
+  }
+
+  res = input_register_device(indev);
+
+  if (res < 0) {
+    printk(KERN_ERR "input_register_device failed with error %d", -res);
+    goto err_input_register_device;
+  }
+
+  return indev;
+
+err_input_register_device:
+  kfree(indev->absinfo);
+  indev->absinfo = NULL;
+err_setup_device:
+  input_free_device(indev);
+err_input_allocate_device:
+  return NULL;
+}
+
 static int __init
 orng_init(void)
 {
@@ -222,34 +257,16 @@ orng_init(void)
     goto err_orng_find_device_by_id;
   }
 
-  indev = input_allocate_device();
+  indev = add_device(devinfo);
 
   if (!indev) {
-    printk(KERN_ERR "input_allocate_device failed");
     res = -ENOMEM;
-    goto err_input_allocate_device;
-  }
-
-  if (!orng_setup_device(indev, devinfo)) {
-    res = -ENOMEM;
-    goto err_setup_device;
-  }
-
-  res = input_register_device(indev);
-
-  if (res < 0) {
-    printk(KERN_ERR "input_register_device failed with error %d", -res);
-    goto err_input_register_device;
+    goto err_add_device;
   }
 
   return 0;
 
-err_input_register_device:
-  kfree(indev->absinfo);
-  indev->absinfo = NULL;
-err_setup_device:
-  input_free_device(indev);
-err_input_allocate_device:
+err_add_device:
 err_orng_find_device_by_id:
   return res;
 }
