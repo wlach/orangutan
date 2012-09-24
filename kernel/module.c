@@ -99,23 +99,26 @@ orng_setup_device(struct input_dev *indev, __u16 bustype, __u16 vendor, __u16 pr
     }
   }
 
-  /* absolute positioing */
+  /* absolute positioning */
 
   if (TEST_ARRAY_BIT(devinfo->evbit, EV_ABS)) {
-    indev->absinfo = kmalloc(sizeof(devinfo->absinfo), GFP_KERNEL);
+    indev->absinfo =
+      kzalloc(sizeof(*indev->absinfo)*NBITS_IN_ARRAY(devinfo->absbit),
+              GFP_KERNEL);
 
     if (!indev->absinfo) {
-      printk(KERN_ERR "kmalloc failed");
+      printk(KERN_ERR "kzalloc failed");
       goto err_kmalloc;
     }
 
     for (i = 0; i < NBITS_IN_ARRAY(devinfo->absbit); ++i) {
       if (TEST_ARRAY_BIT(devinfo->absbit, i)) {
         indev->absbit[BIT_WORD(i)] |= BIT_MASK(i);
-      }
 
-      /* abs limits */
-      memcpy(indev->absinfo+i, devinfo->absinfo+i, sizeof(devinfo->absinfo[i]));
+        /* abs limits */
+        memcpy(indev->absinfo+i, devinfo->absinfo+i,
+               sizeof(devinfo->absinfo[i]));
+      }
     }
   }
 
