@@ -66,6 +66,32 @@ you already have a copy in /data):
 Exact instructions may vary depending on the phone you're working with and its
 partition layout.
 
+# Kernel support
+
+Orangutan comes with a Linux kernel module that lets you emulate arbitrary
+input devices. The use of the module is optional.
+
+A guide on how to build kernel modules for binary-only kernels is available
+at
+
+    http://glandium.org/blog/?p=2664
+
+The resulting binary module is named 'orng.ko' and resides in the subdirectory
+'kernel/'. To copy the binary module to your device, execute
+
+    adb push kernel/orng.ko /system/orng/orng.ko
+
+and load the module with
+
+    adb shell insmod /system/orng/orng.ko <module parameter>
+
+Module parameters are either
+
+    'names' - an comma-separated list of up tp 16 device names, or
+    'bustype', 'vendor', 'product', and 'version' - a device id.
+
+Names take precedence over device ids.
+
 # Using
 
 Orangutan currently just executes "script" files containing a sequence of
