@@ -72,6 +72,18 @@ orng_find_device(const void *param,
   return NULL;
 }
 
+static int
+namecmp_adapter(const struct orng_device_info *devinfo, const void *name)
+{
+  return strcmp(devinfo->name, name);
+}
+
+const struct orng_device_info *
+orng_find_device_by_name(const char *name)
+{
+  return orng_find_device(name, namecmp_adapter);
+}
+
 static long long
 lldiff(long long lhs, long long rhs)
 {
