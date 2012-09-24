@@ -21,21 +21,24 @@
 
 #include "devinfo.h"
 
-char *name;
+#define ORNG_NDEVICES  16
+
+char *names[ORNG_NDEVICES];
+int   nnames = ARRAY_SIZE(names);
 
 __u16 bustype = 0;
 __u16 vendor = 0;
 __u16 product = 0;
 __u16 version = 0;
 
-module_param(name, charp, S_IRUGO);
+module_param_array(names, charp, &nnames, S_IRUGO);
 
 module_param(bustype, ushort, S_IRUGO);
 module_param(vendor, ushort, S_IRUGO);
 module_param(product, ushort, S_IRUGO);
 module_param(version, ushort, S_IRUGO);
 
-static struct input_dev *indev;
+static struct input_dev *indev[ORNG_NDEVICES];
 
 static struct input_dev *
 orng_setup_device(struct input_dev *indev, const struct orng_device_info *devinfo)
@@ -253,36 +256,64 @@ orng_init(void)
 {
   const struct orng_device_info *devinfo;
   int res;
+  int i;
 
-  if (name) {
-    devinfo = orng_find_device_by_name(name);
+  if (names[0]) {
+    for (i = 0; i < nnames; ++i) {
+      devinfo = orng_find_device_by_name(names[i]);
+
+      if (!devinfo) {
+        res = -EINVAL;
+        goto cleanup_devices;
+      }
+
+      indev[i] = add_device(devinfo);
+
+      if (!indev[i]) {
+        res = -ENOMEM;
+        goto cleanup_devices;
+      }
+    }
   } else {
     devinfo = orng_find_device_by_id(bustype, vendor, product, version);
-  }
 
-  if (!devinfo) {
-    res = -EINVAL;
-    goto err_orng_find_device;
-  }
+    if (!devinfo) {
+      res = -EINVAL;
+      goto cleanup_devices;
+    }
 
-  indev = add_device(devinfo);
+    indev[0] = add_device(devinfo);
 
-  if (!indev) {
-    res = -ENOMEM;
-    goto err_add_device;
+    if (!indev[0]) {
+      res = -ENOMEM;
+      goto cleanup_devices;
+    }
   }
 
   return 0;
 
-err_add_device:
-err_orng_find_device:
+cleanup_devices:
+  i = ORNG_NDEVICES;
+  while (i) {
+    --i;
+    if (indev[i]) {
+      input_unregister_device(indev[i]);
+    }
+  }
   return res;
 }
 
 static void __exit
 orng_exit(void)
 {
-  input_unregister_device(indev);
+  int i = ORNG_NDEVICES;
+
+  while (i) {
+    --i;
+    if (indev[i]) {
+      input_unregister_device(indev[i]);
+    }
+  }
   /* don't free indev */
 }
 
