@@ -1,10 +1,11 @@
 #!/bin/sh
 
 NDKROOT=$1
+ORENV=`uname | tr '[A-Z]' '[a-z]'`
 
 if [ ! $NDKROOT ]; then
    echo "Usage: $0 /path/to/android/ndk"
    exit 1
 fi
 
-sed -e s,@NDKROOT@,$NDKROOT,g Makefile.in > Makefile
+sed -e s,@NDKROOT@,$NDKROOT,g Makefile.in | sed -e s,@ORENV@,$ORENV,g > Makefile
