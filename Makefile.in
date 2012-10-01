@@ -1,17 +1,38 @@
 NDKROOT=@NDKROOT@
+
 AGCC=$(NDKROOT)/toolchains/arm-linux-androideabi-4.4.3/prebuilt/linux-x86/bin/arm-linux-androideabi-gcc
-CFLAGS=--sysroot $(NDKROOT)/platforms/android-9/arch-arm -fPIC -mandroid -DANDROID -DOS_ANDROID
 
-.PHONY: push
+ACPPFLAGS := -DANDROID -DOS_ANDROID
+ACFLAGS := --sysroot $(NDKROOT)/platforms/android-9/arch-arm -fPIC -mandroid
+ALDFLAGS :=--sysroot $(NDKROOT)/platforms/android-9/arch-arm -fPIC -mandroid
 
-default: orng
+PROGRAMS := mkdevinfo \
+            orng \
+            su
 
-orng: orng.c
-	echo $(NDKROOT)
-	$(AGCC) $(CFLAGS) $< -o $@
+mkdevinfo_OBJECTS := mkdevinfo.o
 
-su: su.c
-	$(AGCC) $(CFLAGS) $< -o $@
+orng_OBJECTS := orng.o
+
+su_OBJECTS := su.o
+
+.PHONY: all clean push
+
+.DEFAULT: all
+
+.SECONDEXPANSION:
+
+all : $(PROGRAMS)
+
+clean :
+	$(RM) $(PROGRAMS)
+	$(RM) $(sort $(foreach prog,$(PROGRAMS),$($(prog)_OBJECTS)))
+
+%.o : %.c
+	$(AGCC) -c $($@_CPPFLAGS) $(ACPPFLAGS) $(CPPFLAGS) $($@_CFLAGS) $(ACFLAGS) $(CFLAGS) $< -o $@
+
+$(PROGRAMS) : $$($$(@)_OBJECTS)
+	$(AGCC) $($@_LDFLAGS) $(ALDFLAGS) $(LDFLAGS) $^ -o $@
 
 push: orng
 	adb push orgn /mnt/sdcard
