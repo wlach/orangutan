@@ -24,38 +24,7 @@
 #include <errno.h>
 #include <assert.h>
 
-struct input_event {
-	struct timeval time;
-	__u16 type;
-	__u16 code;
-	__s32 value;
-};
-
-#define EVIOCGVERSION		_IOR('E', 0x01, int)			/* get driver version */
-#define EVIOCGID		_IOR('E', 0x02, struct input_id)	/* get device ID */
-#define EVIOCGKEYCODE		_IOR('E', 0x04, int[2])			/* get keycode */
-#define EVIOCSKEYCODE		_IOW('E', 0x04, int[2])			/* set keycode */
-
-#define EVIOCGNAME(len)		_IOC(_IOC_READ, 'E', 0x06, len)		/* get device name */
-#define EVIOCGPHYS(len)		_IOC(_IOC_READ, 'E', 0x07, len)		/* get physical location */
-#define EVIOCGUNIQ(len)		_IOC(_IOC_READ, 'E', 0x08, len)		/* get unique identifier */
-
-#define EVIOCGKEY(len)		_IOC(_IOC_READ, 'E', 0x18, len)		/* get global keystate */
-#define EVIOCGLED(len)		_IOC(_IOC_READ, 'E', 0x19, len)		/* get all LEDs */
-#define EVIOCGSND(len)		_IOC(_IOC_READ, 'E', 0x1a, len)		/* get all sounds status */
-#define EVIOCGSW(len)		_IOC(_IOC_READ, 'E', 0x1b, len)		/* get all switch states */
-
-#define EVIOCGBIT(ev,len)	_IOC(_IOC_READ, 'E', 0x20 + ev, len)	/* get event bits */
-#define EVIOCGABS(abs)		_IOR('E', 0x40 + abs, struct input_absinfo)		/* get abs value/limits */
-#define EVIOCSABS(abs)		_IOW('E', 0xc0 + abs, struct input_absinfo)		/* set abs value/limits */
-
-#define EVIOCSFF		_IOC(_IOC_WRITE, 'E', 0x80, sizeof(struct ff_effect))	/* send a force effect to a force feedback device */
-#define EVIOCRMFF		_IOW('E', 0x81, int)			/* Erase a force effect */
-#define EVIOCGEFFECTS		_IOR('E', 0x84, int)			/* Report number of effects playable at the same time */
-
-#define EVIOCGRAB		_IOW('E', 0x90, int)			/* Grab/Release device */
-
-// end <linux/input.h>
+#include "inputdefs.h"
 
 #define FROYO_EVENT_PROTO 65536
 #define ICS_EVENT_PROTO 65537
@@ -89,44 +58,44 @@ void execute_sleep(int duration_msec)
 void execute_press(int fd, int version, int x, int y)
 {
   if (version == ICS_EVENT_PROTO) {
-    write_event(fd,3,58,90);
-    write_event(fd,3,53,x);
-    write_event(fd,3,54,y);
-    write_event(fd,0,0,0);
+    write_event(fd, 3, ABS_MT_PRESSURE, 90);
+    write_event(fd, 3, ABS_MT_POSITION_X, x);
+    write_event(fd, 3, ABS_MT_POSITION_Y, y);
+    write_event(fd, 0, 0, 0);
   } else if (version == FROYO_EVENT_PROTO) {
-    write_event(fd,3,53,x);
-    write_event(fd,3,54,y);
-    write_event(fd,3,48,33);
-    write_event(fd,3,50,4);
-    write_event(fd,0,2,0);
-    write_event(fd,0,0,0);
+    write_event(fd, 3, ABS_MT_POSITION_X, x);
+    write_event(fd, 3, ABS_MT_POSITION_Y, y);
+    write_event(fd, 3, ABS_MT_TOUCH_MAJOR, 33);
+    write_event(fd, 3, ABS_MT_WIDTH_MAJOR, 4);
+    write_event(fd, 0, 2, 0);
+    write_event(fd, 0, 0, 0);
   }
 }
 
 void execute_move(int fd, int version, int x, int y)
 {
   if (version == ICS_EVENT_PROTO) {
-      write_event(fd,3,53,x);
-      write_event(fd,3,54,y);
-      write_event(fd,0,0,0);
+    write_event(fd, 3, ABS_MT_POSITION_X, x);
+    write_event(fd, 3, ABS_MT_POSITION_Y, y);
+    write_event(fd, 0, 0, 0);
   } else if (version == FROYO_EVENT_PROTO) {
-    write_event(fd,3,53,x);
-    write_event(fd,3,54,y);
-    write_event(fd,3,48,33);
-    write_event(fd,3,50,4);
-    write_event(fd,0,2,0);
-    write_event(fd,0,0,0);
+    write_event(fd, 3, ABS_MT_POSITION_X, x);
+    write_event(fd, 3, ABS_MT_POSITION_Y, y);
+    write_event(fd, 3, ABS_MT_TOUCH_MAJOR, 33);
+    write_event(fd, 3, ABS_MT_WIDTH_MAJOR, 4);
+    write_event(fd, 0, 2, 0);
+    write_event(fd, 0, 0, 0);
   }
 }
 
 void execute_release(int fd, int version)
 {
   if (version == ICS_EVENT_PROTO) {
-    write_event(fd,3,58,0);
-    write_event(fd,0,0,0);
+    write_event(fd, 3, ABS_MT_PRESSURE,0);
+    write_event(fd, 0, 0, 0);
   } else if (version == FROYO_EVENT_PROTO) {
-    write_event(fd,0,2,0);
-    write_event(fd,0,0,0);
+    write_event(fd, 0, 2, 0);
+    write_event(fd, 0, 0, 0);
   }
 }
 
