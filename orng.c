@@ -32,6 +32,8 @@
 #define MAX_COMMAND_ARGS 16
 #define MAX_COMMAND_LEN 256
 
+static int global_tracking_id = 1;
+
 void write_event(int fd, int type, int code, int value)
 {
   struct input_event event;
@@ -53,6 +55,29 @@ void write_event(int fd, int type, int code, int value)
 void execute_sleep(int duration_msec)
 {
   usleep(duration_msec*1000);
+}
+
+void add_mt_tracking_id(int fd, int version, int id)
+{
+  if (version == ICS_EVENT_PROTO) {
+    write_event(fd, 3, ABS_MT_TRACKING_ID, id);
+  }
+}
+
+void change_mt_slot(int fd, int version, int slot)
+{
+  if (version == ICS_EVENT_PROTO) {
+    write_event(fd, 3, ABS_MT_SLOT, slot);
+  }
+}
+
+void remove_mt_tracking_id(int fd, int version, int slot)
+{
+  if (version == ICS_EVENT_PROTO) {
+    write_event(fd, 3, ABS_MT_SLOT, slot);
+    write_event(fd, 3, ABS_MT_TRACKING_ID, -1);
+    write_event(fd, 0, 0, 0);
+  }
 }
 
 void execute_press(int fd, int version, int x, int y)
@@ -85,6 +110,14 @@ void execute_move(int fd, int version, int x, int y)
     write_event(fd, 3, ABS_MT_WIDTH_MAJOR, 4);
     write_event(fd, 0, 2, 0);
     write_event(fd, 0, 0, 0);
+  }
+}
+
+void execute_move_unsynced(int fd, int version, int x, int y)
+{
+  if (version == ICS_EVENT_PROTO) {
+    write_event(fd, 3, ABS_MT_POSITION_X, x);
+    write_event(fd, 3, ABS_MT_POSITION_Y, y);
   }
 }
 
@@ -140,6 +173,52 @@ void execute_tap(int fd, int version, int x, int y, int num_times)
   }
 }
 
+void execute_pinch(int fd, int version, int touch1_x1, int touch1_y1,
+                   int touch1_x2, int touch1_y2, int touch2_x1, int touch2_y1,
+                   int touch2_x2, int touch2_y2, int num_steps, int duration_msec)
+{
+    int delta1[] = {(touch1_x2-touch1_x1)/num_steps, (touch1_y2-touch1_y1)/num_steps};
+    int delta2[] = {(touch2_x2-touch2_x1)/num_steps, (touch2_y2-touch2_y1)/num_steps};
+    int sleeptime = duration_msec / num_steps;
+    int i;
+
+    // press
+    change_mt_slot(fd, version, 0);
+    add_mt_tracking_id(fd, version, global_tracking_id++);
+    execute_press(fd, version, touch1_x1, touch1_y1);
+
+    change_mt_slot(fd, version, 1);
+    add_mt_tracking_id(fd, version, global_tracking_id++);
+    execute_press(fd, version, touch2_x1, touch2_y1);
+
+    // drag
+    for (i=0; i<num_steps; i++) {
+      execute_sleep(sleeptime);
+
+      change_mt_slot(fd, version, 0);
+      execute_move(fd, version, touch1_x1+delta1[0]*i, touch1_y1+delta1[1]*i);
+
+      change_mt_slot(fd, version, 1);
+      execute_move(fd, version, touch2_x1+delta2[0]*i, touch2_y1+delta2[1]*i);
+
+      //write_event(fd, 0, 0, 0);
+    }
+
+    // release
+    change_mt_slot(fd, version, 0);
+    execute_release(fd, version);
+
+    change_mt_slot(fd, version, 1);
+    execute_release(fd, version);
+
+    remove_mt_tracking_id(fd, version, 0);
+    remove_mt_tracking_id(fd, version, 1);
+
+    // wait
+    execute_sleep(100);
+
+}
+
 int main(int argc, char *argv[])
 {
     int i;
@@ -193,6 +272,10 @@ int main(int argc, char *argv[])
       } else if (strcmp(cmd, "sleep") == 0) {
         assert(num_args == 1);
         execute_sleep(args[0]);
+      } else if (strcmp(cmd, "pinch") == 0) {
+        assert(num_args == 10);
+        execute_pinch(fd, version, args[0], args[1], args[2], args[3], args[4], args[5],
+                     args[6], args[7], args[8], args[9]);
       } else {
         printf("Unrecognized command: '%s'", cmd);
         return 1;
