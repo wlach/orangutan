@@ -1,0 +1,20 @@
+
+LOCAL_PATH:= $(call my-dir)
+
+include $(CLEAR_VARS)
+
+LOCAL_MODULE      := mkdevinfo
+LOCAL_MODULE_TAGS := eng
+LOCAL_MODULE_PATH := $(TARGET_OUT_OPTIONAL_EXECUTABLES)
+LOCAL_SRC_FILES   := mkdevinfo.c
+
+include $(BUILD_EXECUTABLE)
+
+include $(CLEAR_VARS)
+
+LOCAL_MODULE      := orng
+LOCAL_MODULE_TAGS := eng
+LOCAL_MODULE_PATH := $(TARGET_OUT_OPTIONAL_EXECUTABLES)
+LOCAL_SRC_FILES   := orng.c
+
+include $(BUILD_EXECUTABLE)
