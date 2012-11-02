@@ -83,9 +83,12 @@ void remove_mt_tracking_id(int fd, int version, int slot)
 void execute_press(int fd, int version, int x, int y)
 {
   if (version == ICS_EVENT_PROTO) {
+    write_event(fd, 3, ABS_MT_TOUCH_MAJOR, 32);
+    write_event(fd, 3, ABS_MT_WIDTH_MAJOR, 4);
     write_event(fd, 3, ABS_MT_PRESSURE, 90);
     write_event(fd, 3, ABS_MT_POSITION_X, x);
     write_event(fd, 3, ABS_MT_POSITION_Y, y);
+    write_event(fd, 0, 2, 0);
     write_event(fd, 0, 0, 0);
   } else if (version == FROYO_EVENT_PROTO) {
     write_event(fd, 3, ABS_MT_POSITION_X, x);
@@ -100,8 +103,12 @@ void execute_press(int fd, int version, int x, int y)
 void execute_move(int fd, int version, int x, int y)
 {
   if (version == ICS_EVENT_PROTO) {
+    write_event(fd, 3, ABS_MT_TOUCH_MAJOR, 32);
+    write_event(fd, 3, ABS_MT_WIDTH_MAJOR, 4);
     write_event(fd, 3, ABS_MT_POSITION_X, x);
     write_event(fd, 3, ABS_MT_POSITION_Y, y);
+    write_event(fd, 3, ABS_MT_PRESSURE, 90);
+    write_event(fd, 0, 2, 0);
     write_event(fd, 0, 0, 0);
   } else if (version == FROYO_EVENT_PROTO) {
     write_event(fd, 3, ABS_MT_POSITION_X, x);
@@ -125,6 +132,7 @@ void execute_release(int fd, int version)
 {
   if (version == ICS_EVENT_PROTO) {
     write_event(fd, 3, ABS_MT_PRESSURE,0);
+    write_event(fd, 0, 2, 0);
     write_event(fd, 0, 0, 0);
   } else if (version == FROYO_EVENT_PROTO) {
     write_event(fd, 0, 2, 0);
