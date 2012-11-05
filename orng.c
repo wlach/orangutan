@@ -32,6 +32,8 @@
 #define MAX_COMMAND_ARGS 16
 #define MAX_COMMAND_LEN 256
 
+#define NEED_MT_SYN 1
+
 static int global_tracking_id = 1;
 
 void write_event(int fd, int type, int code, int value)
@@ -57,123 +59,130 @@ void execute_sleep(int duration_msec)
   usleep(duration_msec*1000);
 }
 
-void add_mt_tracking_id(int fd, int version, int id)
+void add_mt_tracking_id(int fd, int version, unsigned int device_flags, int id)
 {
   if (version == ICS_EVENT_PROTO) {
-    write_event(fd, 3, ABS_MT_TRACKING_ID, id);
+    write_event(fd, EV_ABS, ABS_MT_TRACKING_ID, id);
   }
 }
 
-void change_mt_slot(int fd, int version, int slot)
+void change_mt_slot(int fd, int version, unsigned int device_flags, int slot)
 {
   if (version == ICS_EVENT_PROTO) {
-    write_event(fd, 3, ABS_MT_SLOT, slot);
+    write_event(fd, EV_ABS, ABS_MT_SLOT, slot);
   }
 }
 
-void remove_mt_tracking_id(int fd, int version, int slot)
+void remove_mt_tracking_id(int fd, int version, unsigned int device_flags,
+                           int slot)
 {
   if (version == ICS_EVENT_PROTO) {
-    write_event(fd, 3, ABS_MT_SLOT, slot);
-    write_event(fd, 3, ABS_MT_TRACKING_ID, -1);
-    write_event(fd, 0, 0, 0);
+    write_event(fd, EV_ABS, ABS_MT_SLOT, slot);
+    write_event(fd, EV_ABS, ABS_MT_TRACKING_ID, -1);
+    write_event(fd, EV_SYN, SYN_REPORT, 0);
   }
 }
 
-void execute_press(int fd, int version, int x, int y)
+void execute_press(int fd, int version, int device_flags, int x, int y)
 {
   if (version == ICS_EVENT_PROTO) {
-    write_event(fd, 3, ABS_MT_TOUCH_MAJOR, 32);
-    write_event(fd, 3, ABS_MT_WIDTH_MAJOR, 4);
-    write_event(fd, 3, ABS_MT_PRESSURE, 90);
-    write_event(fd, 3, ABS_MT_POSITION_X, x);
-    write_event(fd, 3, ABS_MT_POSITION_Y, y);
-    write_event(fd, 0, 2, 0);
-    write_event(fd, 0, 0, 0);
+    write_event(fd, EV_ABS, ABS_MT_TOUCH_MAJOR, 32);
+    write_event(fd, EV_ABS, ABS_MT_WIDTH_MAJOR, 4);
+    write_event(fd, EV_ABS, ABS_MT_PRESSURE, 90);
+    write_event(fd, EV_ABS, ABS_MT_POSITION_X, x);
+    write_event(fd, EV_ABS, ABS_MT_POSITION_Y, y);
+    if (device_flags & NEED_MT_SYN)
+      write_event(fd, EV_SYN, SYN_MT_REPORT, 0);
+    write_event(fd, EV_SYN, SYN_REPORT, 0);
   } else if (version == FROYO_EVENT_PROTO) {
-    write_event(fd, 3, ABS_MT_POSITION_X, x);
-    write_event(fd, 3, ABS_MT_POSITION_Y, y);
-    write_event(fd, 3, ABS_MT_TOUCH_MAJOR, 33);
-    write_event(fd, 3, ABS_MT_WIDTH_MAJOR, 4);
-    write_event(fd, 0, 2, 0);
-    write_event(fd, 0, 0, 0);
+    write_event(fd, EV_ABS, ABS_MT_POSITION_X, x);
+    write_event(fd, EV_ABS, ABS_MT_POSITION_Y, y);
+    write_event(fd, EV_ABS, ABS_MT_TOUCH_MAJOR, 33);
+    write_event(fd, EV_ABS, ABS_MT_WIDTH_MAJOR, 4);
+    write_event(fd, EV_SYN, SYN_MT_REPORT, 0);
+    write_event(fd, EV_SYN, SYN_REPORT, 0);
   }
 }
 
-void execute_move(int fd, int version, int x, int y)
+void execute_move(int fd, int version, unsigned int device_flags, int x, int y)
 {
   if (version == ICS_EVENT_PROTO) {
-    write_event(fd, 3, ABS_MT_TOUCH_MAJOR, 32);
-    write_event(fd, 3, ABS_MT_WIDTH_MAJOR, 4);
-    write_event(fd, 3, ABS_MT_POSITION_X, x);
-    write_event(fd, 3, ABS_MT_POSITION_Y, y);
-    write_event(fd, 3, ABS_MT_PRESSURE, 90);
-    write_event(fd, 0, 2, 0);
-    write_event(fd, 0, 0, 0);
+    write_event(fd, EV_ABS, ABS_MT_TOUCH_MAJOR, 32);
+    write_event(fd, EV_ABS, ABS_MT_WIDTH_MAJOR, 4);
+    write_event(fd, EV_ABS, ABS_MT_POSITION_X, x);
+    write_event(fd, EV_ABS, ABS_MT_POSITION_Y, y);
+    write_event(fd, EV_ABS, ABS_MT_PRESSURE, 90);
+    if (device_flags & NEED_MT_SYN)
+      write_event(fd, EV_SYN, SYN_MT_REPORT, 0);
+    write_event(fd, EV_SYN, SYN_REPORT, 0);
   } else if (version == FROYO_EVENT_PROTO) {
-    write_event(fd, 3, ABS_MT_POSITION_X, x);
-    write_event(fd, 3, ABS_MT_POSITION_Y, y);
-    write_event(fd, 3, ABS_MT_TOUCH_MAJOR, 33);
-    write_event(fd, 3, ABS_MT_WIDTH_MAJOR, 4);
-    write_event(fd, 0, 2, 0);
-    write_event(fd, 0, 0, 0);
+    write_event(fd, EV_ABS, ABS_MT_POSITION_X, x);
+    write_event(fd, EV_ABS, ABS_MT_POSITION_Y, y);
+    write_event(fd, EV_ABS, ABS_MT_TOUCH_MAJOR, 33);
+    write_event(fd, EV_ABS, ABS_MT_WIDTH_MAJOR, 4);
+    write_event(fd, EV_SYN, SYN_MT_REPORT, 0);
+    write_event(fd, EV_SYN, SYN_REPORT, 0);
   }
 }
 
-void execute_move_unsynced(int fd, int version, int x, int y)
+void execute_move_unsynced(int fd, int version, unsigned int device_flags,
+                           int x, int y)
 {
   if (version == ICS_EVENT_PROTO) {
-    write_event(fd, 3, ABS_MT_POSITION_X, x);
-    write_event(fd, 3, ABS_MT_POSITION_Y, y);
+    write_event(fd, EV_ABS, ABS_MT_POSITION_X, x);
+    write_event(fd, EV_ABS, ABS_MT_POSITION_Y, y);
   }
 }
 
-void execute_release(int fd, int version)
+void execute_release(int fd, int version, unsigned int device_flags)
 {
   if (version == ICS_EVENT_PROTO) {
-    write_event(fd, 3, ABS_MT_PRESSURE,0);
-    write_event(fd, 0, 2, 0);
-    write_event(fd, 0, 0, 0);
+    write_event(fd, EV_ABS, ABS_MT_PRESSURE,0);
+    if (device_flags & NEED_MT_SYN)
+      write_event(fd, EV_SYN, SYN_MT_REPORT, 0);
+    write_event(fd, EV_SYN, SYN_REPORT, 0);
   } else if (version == FROYO_EVENT_PROTO) {
-    write_event(fd, 0, 2, 0);
-    write_event(fd, 0, 0, 0);
+    write_event(fd, EV_SYN, SYN_MT_REPORT, 0);
+    write_event(fd, EV_SYN, SYN_REPORT, 0);
   }
 }
 
-void execute_drag(int fd, int version, int start_x, int start_y, int end_x,
-                  int end_y, int num_steps, int duration_msec)
+void execute_drag(int fd, int version, unsigned int device_flags, int start_x,
+                  int start_y, int end_x, int end_y, int num_steps,
+                  int duration_msec)
 {
     int delta[] = {(end_x-start_x)/num_steps, (end_y-start_y)/num_steps};
     int sleeptime = duration_msec / num_steps;
     int i;
 
     // press
-    execute_press(fd, version, start_x, start_y);
+    execute_press(fd, version, device_flags, start_x, start_y);
 
     // drag
     for (i=0; i<num_steps; i++) {
       execute_sleep(sleeptime);
-      execute_move(fd, version, start_x+delta[0]*i, start_y+delta[1]*i);
+      execute_move(fd, version, device_flags, start_x+delta[0]*i, start_y+delta[1]*i);
     }
 
     // release
-    execute_release(fd, version);
+    execute_release(fd, version, device_flags);
 
     // wait
     execute_sleep(100);
 }
 
-void execute_tap(int fd, int version, int x, int y, int num_times)
+void execute_tap(int fd, int version, unsigned int device_flags, int x, int y,
+                 int num_times)
 {
   int i;
 
   for (i=0;i<num_times;i++) {
     // press
-    execute_press(fd, version, x, y);
+    execute_press(fd, version, device_flags, x, y);
     execute_sleep(100);
 
     // release
-    execute_release(fd, version);
+    execute_release(fd, version, device_flags);
     execute_sleep(100);
 
     // wait
@@ -181,9 +190,10 @@ void execute_tap(int fd, int version, int x, int y, int num_times)
   }
 }
 
-void execute_pinch(int fd, int version, int touch1_x1, int touch1_y1,
-                   int touch1_x2, int touch1_y2, int touch2_x1, int touch2_y1,
-                   int touch2_x2, int touch2_y2, int num_steps, int duration_msec)
+void execute_pinch(int fd, int version, unsigned int device_flags, int touch1_x1,
+                   int touch1_y1, int touch1_x2, int touch1_y2, int touch2_x1,
+                   int touch2_y1, int touch2_x2, int touch2_y2, int num_steps,
+                   int duration_msec)
 {
     int delta1[] = {(touch1_x2-touch1_x1)/num_steps, (touch1_y2-touch1_y1)/num_steps};
     int delta2[] = {(touch2_x2-touch2_x1)/num_steps, (touch2_y2-touch2_y1)/num_steps};
@@ -191,36 +201,36 @@ void execute_pinch(int fd, int version, int touch1_x1, int touch1_y1,
     int i;
 
     // press
-    change_mt_slot(fd, version, 0);
-    add_mt_tracking_id(fd, version, global_tracking_id++);
-    execute_press(fd, version, touch1_x1, touch1_y1);
+    change_mt_slot(fd, version, device_flags, 0);
+    add_mt_tracking_id(fd, version, device_flags, global_tracking_id++);
+    execute_press(fd, version, device_flags, touch1_x1, touch1_y1);
 
-    change_mt_slot(fd, version, 1);
-    add_mt_tracking_id(fd, version, global_tracking_id++);
-    execute_press(fd, version, touch2_x1, touch2_y1);
+    change_mt_slot(fd, version, device_flags, 1);
+    add_mt_tracking_id(fd, version, device_flags, global_tracking_id++);
+    execute_press(fd, version, device_flags, touch2_x1, touch2_y1);
 
     // drag
     for (i=0; i<num_steps; i++) {
       execute_sleep(sleeptime);
 
-      change_mt_slot(fd, version, 0);
-      execute_move(fd, version, touch1_x1+delta1[0]*i, touch1_y1+delta1[1]*i);
+      change_mt_slot(fd, version, device_flags, 0);
+      execute_move(fd, version, device_flags, touch1_x1+delta1[0]*i, touch1_y1+delta1[1]*i);
 
-      change_mt_slot(fd, version, 1);
-      execute_move(fd, version, touch2_x1+delta2[0]*i, touch2_y1+delta2[1]*i);
+      change_mt_slot(fd, version, device_flags, 1);
+      execute_move(fd, version, device_flags, touch2_x1+delta2[0]*i, touch2_y1+delta2[1]*i);
 
-      //write_event(fd, 0, 0, 0);
+      //write_event(fd, EV_SYN, SYN_REPORT, 0);
     }
 
     // release
-    change_mt_slot(fd, version, 0);
-    execute_release(fd, version);
+    change_mt_slot(fd, version, device_flags, 0);
+    execute_release(fd, version, device_flags);
 
-    change_mt_slot(fd, version, 1);
-    execute_release(fd, version);
+    change_mt_slot(fd, version, device_flags, 1);
+    execute_release(fd, version, device_flags);
 
-    remove_mt_tracking_id(fd, version, 0);
-    remove_mt_tracking_id(fd, version, 1);
+    remove_mt_tracking_id(fd, version, device_flags, 0);
+    remove_mt_tracking_id(fd, version, device_flags, 1);
 
     // wait
     execute_sleep(100);
@@ -237,6 +247,8 @@ int main(int argc, char *argv[])
     int num_args = 0;
     int args[MAX_COMMAND_ARGS];
     char *line, *cmd, *arg;
+    char device_name[80];
+    unsigned int device_flags = 0;
 
     if(argc != 3) {
         fprintf(stderr, "Usage: %s <device> <script file>\n", argv[0]);
@@ -249,8 +261,19 @@ int main(int argc, char *argv[])
         return 1;
     }
     if (ioctl(fd, EVIOCGVERSION, &version)) {
-        fprintf(stderr, "could not get driver version for %s, %s\n", argv[optind], strerror(errno));
+        fprintf(stderr, "could not get driver version for %s, %s\n",
+                argv[optind], strerror(errno));
         return 1;
+    }
+    if(ioctl(fd, EVIOCGNAME(sizeof(device_name) - 1), &device_name) < 1) {
+        //fprintf(stderr, "could not get device name for %s, %s\n", device, strerror(errno));
+        device_name[0] = '\0';
+    }
+
+    // the atmel touchscreen has a weird protocol which requires MT_SYN events
+    // to be sent after every touch
+    if(strcmp(device_name, "atmel-touchscreen") == 0) {
+      device_flags &= NEED_MT_SYN;
     }
 
     FILE *f = fopen(argv[2], "r");
@@ -273,17 +296,19 @@ int main(int argc, char *argv[])
 
       if (strcmp(cmd, "tap") == 0) {
         assert(num_args == 3);
-        execute_tap(fd, version, args[0], args[1], args[2]);
+        execute_tap(fd, version, device_flags, args[0], args[1], args[2]);
       } else if (strcmp(cmd, "drag") == 0) {
         assert(num_args == 6);
-        execute_drag(fd, version, args[0], args[1], args[2], args[3], args[4], args[5]);
+        execute_drag(fd, version, device_flags, args[0], args[1], args[2],
+                     args[3], args[4], args[5]);
       } else if (strcmp(cmd, "sleep") == 0) {
         assert(num_args == 1);
         execute_sleep(args[0]);
       } else if (strcmp(cmd, "pinch") == 0) {
         assert(num_args == 10);
-        execute_pinch(fd, version, args[0], args[1], args[2], args[3], args[4], args[5],
-                     args[6], args[7], args[8], args[9]);
+        execute_pinch(fd, version, device_flags, args[0], args[1], args[2],
+                      args[3], args[4], args[5], args[6], args[7], args[8],
+                      args[9]);
       } else {
         printf("Unrecognized command: '%s'", cmd);
         return 1;
