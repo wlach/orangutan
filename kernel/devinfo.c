@@ -23,7 +23,6 @@ orng_find_device(const void *param,
   static const struct orng_device_info devinfo[] = {
     /* All device information are in a separate file. */
 #include "devspec.h"
-    /* The final entry of this array is the default. */
     {
       .id = {
         .bustype = 0,
@@ -31,32 +30,76 @@ orng_find_device(const void *param,
         .product = 0,
         .version = 0
       },
-      .name = "Generic touch screen",
+      .name = "720p_touchscreen",
       .evbit = {
         [BIT_WORD(EV_ABS)] = BIT_MASK(EV_ABS)
       },
       .absbit = {
-        [0] = (ABS_X%BITS_PER_BYTE)|(ABS_Y%BITS_PER_BYTE),
-        [5] = (ABS_MT_SLOT%BITS_PER_BYTE),
-        [6] = (ABS_MT_POSITION_X%BITS_PER_BYTE)|(ABS_MT_POSITION_Y%BITS_PER_BYTE),
+        [6] = (1<<((ABS_MT_TOUCH_MAJOR)%BITS_PER_BYTE)) |
+              (1<<((ABS_MT_WIDTH_MAJOR)%BITS_PER_BYTE)) |
+              (1<<((ABS_MT_ORIENTATION)%BITS_PER_BYTE)) |
+              (1<<((ABS_MT_POSITION_X)%BITS_PER_BYTE)) |
+              (1<<((ABS_MT_POSITION_Y)%BITS_PER_BYTE)),
+        [7] = (1<<((ABS_MT_TRACKING_ID)%BITS_PER_BYTE)) |
+              (1<<((ABS_MT_PRESSURE)%BITS_PER_BYTE))
       },
       .absinfo = {
-        [ABS_X] = {
+        [ABS_MT_TOUCH_MAJOR] = {
           .value = 0,
-          .minimum = SHRT_MIN,
-          .maximum = SHRT_MAX,
+          .minimum = 0,
+          .maximum = 255,
           .fuzz = 0,
           .flat = 0,
-          .resolution = 1
+          .resolution = 0
         },
-        [ABS_Y] = {
+        [ABS_MT_WIDTH_MAJOR] = {
           .value = 0,
-          .minimum = SHRT_MIN,
-          .maximum = SHRT_MAX,
+          .minimum = 0,
+          .maximum = 15,
           .fuzz = 0,
           .flat = 0,
-          .resolution = 1
-        }
+          .resolution = 0
+        },
+        [ABS_MT_ORIENTATION] = {
+          .value = 0,
+          .minimum = 0,
+          .maximum = 0,
+          .fuzz = 0,
+          .flat = 0,
+          .resolution = 0
+        },
+        [ABS_MT_POSITION_X] = {
+          .value = 0,
+          .minimum = 0,
+          .maximum = 719,
+          .fuzz = 0,
+          .flat = 0,
+          .resolution = 0
+        },
+        [ABS_MT_POSITION_Y] = {
+          .value = 0,
+          .minimum = 0,
+          .maximum = 1279,
+          .fuzz = 0,
+          .flat = 0,
+          .resolution = 0
+        },
+        [ABS_MT_TRACKING_ID] = {
+          .value = 0,
+          .minimum = 0,
+          .maximum = 10,
+          .fuzz = 0,
+          .flat = 0,
+          .resolution = 0
+        },
+			  [ABS_MT_PRESSURE] = {
+				  .value = 0,
+				  .minimum = 0,
+				  .maximum = 255,
+				  .fuzz = 0,
+				  .flat = 0,
+				  .resolution = 0
+			  }
       }
     }
   };
