@@ -38,6 +38,7 @@
 
 struct orng_device_info {
   struct input_id id;
+  char *cname; /* canonical name with device name and s/ /_/g */
   char *name;
   char *phys;
   char *uniq;

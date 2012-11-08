@@ -12,6 +12,7 @@
 			.product = 0,
 			.version = 0
 		},
+		.cname = "otoro-atmel-touchscreen",
 		.name = "atmel-touchscreen",
 		.evbit = {
 			0x0b, 0x00, 0x00, 0x00
@@ -112,6 +113,7 @@
 			.product = 0,
 			.version = 0
 		},
+		.cname = "otoro-roamer2_keypad",
 		.name = "roamer2_keypad",
 		.evbit = {
 			0x03, 0x00, 0x00, 0x00
@@ -151,6 +153,7 @@
 			.product = 0,
 			.version = 0
 		},
+		.cname = "otoro-light",
 		.name = "light",
 		.evbit = {
 			0x09, 0x00, 0x00, 0x00
@@ -177,6 +180,7 @@
 			.product = 0,
 			.version = 0
 		},
+		.cname = "otoro-proximity",
 		.name = "proximity",
 		.evbit = {
 			0x09, 0x00, 0x00, 0x00
@@ -203,6 +207,7 @@
 			.product = 0,
 			.version = 0
 		},
+		.cname = "otoro-compass",
 		.name = "compass",
 		.evbit = {
 			0x09, 0x00, 0x00, 0x00
@@ -309,6 +314,7 @@
 			.product = 1,
 			.version = 1
 		},
+		.cname = "otoro-7k_handset",
 		.name = "7k_handset",
 		.evbit = {
 			0x23, 0x00, 0x00, 0x00
@@ -355,6 +361,7 @@
 			.product = 1,
 			.version = 256
 		},
+		.cname = "panda-gpio-keys",
 		.name = "gpio-keys",
 		.phys = "gpio-keys/input0",
 		.evbit = {
@@ -395,6 +402,7 @@
 			.product = 0,
 			.version = 0
 		},
+		.cname = "panda-panda_headset_jack",
 		.name = "Panda Headset Jack",
 		.phys = "ALSA",
 		.evbit = {

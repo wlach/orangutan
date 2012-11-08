@@ -30,7 +30,8 @@ orng_find_device(const void *param,
         .product = 0,
         .version = 0
       },
-      .name = "720p_touchscreen",
+      .cname = "generic-720p_touchscreen",
+      .name = "720p touchscreen",
       .evbit = {
         [BIT_WORD(EV_ABS)] = BIT_MASK(EV_ABS)
       },
