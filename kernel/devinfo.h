@@ -68,6 +68,9 @@ struct orng_device_info {
 #ifdef __KERNEL__
 
 const struct orng_device_info *
+orng_find_device_by_cname(const char *cname);
+
+const struct orng_device_info *
 orng_find_device_by_name(const char *name);
 
 const struct orng_device_info *

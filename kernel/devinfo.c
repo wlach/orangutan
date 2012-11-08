@@ -117,6 +117,18 @@ orng_find_device(const void *param,
 }
 
 static int
+cnamecmp_adapter(const struct orng_device_info *devinfo, const void *cname)
+{
+  return strcmp(devinfo->cname, cname);
+}
+
+const struct orng_device_info *
+orng_find_device_by_cname(const char *cname)
+{
+  return orng_find_device(cname, cnamecmp_adapter);
+}
+
+static int
 namecmp_adapter(const struct orng_device_info *devinfo, const void *name)
 {
   return strcmp(devinfo->name, name);
