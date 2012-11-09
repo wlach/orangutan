@@ -120,7 +120,7 @@ read_devinfo(struct orng_device_info *devinfo, int with_scancodes, int fd)
     for (i = 0; i <= ABS_MAX; ++i) {
       if (devinfo->absbit[i/8] & (i%8)) {
         if (ioctl(fd, EVIOCGABS(i), devinfo->absinfo+i) < 0) {
-          fprintf(stderr, "ioctl(EVIOCGABS(%lu)): %s\n", strerror(errno), i);
+          fprintf(stderr, "ioctl(EVIOCGABS(%d)): %s\n", i, strerror(errno));
           goto err_ioctl;
         }
       }
@@ -228,7 +228,7 @@ read_devinfo(struct orng_device_info *devinfo, int with_scancodes, int fd)
     }
   } else if (errno != ENOENT) {
     fprintf(stderr, "ioctl(EVIOCGPHYS(%lu)): %s\n",
-            (unsigned int)sizeof(buf), strerror(errno));
+            (unsigned long)sizeof(buf), strerror(errno));
     goto err_ioctl;
   }
 
@@ -249,7 +249,7 @@ read_devinfo(struct orng_device_info *devinfo, int with_scancodes, int fd)
     }
   } else if (errno != ENOENT) {
     fprintf(stderr, "ioctl(EVIOCGPHYS(%lu)): %s\n",
-            (unsigned int)sizeof(buf), strerror(errno));
+            (unsigned long)sizeof(buf), strerror(errno));
     goto err_ioctl;
   }
 
@@ -270,7 +270,7 @@ read_devinfo(struct orng_device_info *devinfo, int with_scancodes, int fd)
     }
   } else if (errno != ENOENT) {
     fprintf(stderr, "ioctl(EVIOCGUNIQ(%lu)): %s\n",
-            (unsigned int)sizeof(buf), strerror(errno));
+            (unsigned long)sizeof(buf), strerror(errno));
     goto err_ioctl;
   }
 
@@ -370,10 +370,10 @@ write_devinfo(const struct orng_device_info *devinfo, int with_scancodes, FILE *
   /* device identifier */
 
   fprintf(f, "\t\t.id = {\n"
-             "\t\t\t.bustype = %lu,\n"
-             "\t\t\t.vendor = %lu,\n"
-             "\t\t\t.product = %lu,\n"
-             "\t\t\t.version = %lu\n"
+             "\t\t\t.bustype = %u,\n"
+             "\t\t\t.vendor = %u,\n"
+             "\t\t\t.product = %u,\n"
+             "\t\t\t.version = %u\n"
              "\t\t}", devinfo->id.bustype, devinfo->id.vendor,
              devinfo->id.product, devinfo->id.version);
 
@@ -449,7 +449,7 @@ write_devinfo(const struct orng_device_info *devinfo, int with_scancodes, FILE *
     fprintf(f, ",\n"
                "\t\t.rep = {\n"
                "\t\t\t%ld, %ld\n"
-               "\t\t}", devinfo->rep[0], devinfo->rep[1]);
+               "\t\t}", (long)devinfo->rep[0], (long)devinfo->rep[1]);
   }
 
   /* state */
