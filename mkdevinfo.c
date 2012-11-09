@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+#include <ctype.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <stdio.h>
@@ -355,7 +356,7 @@ write_u32_buf(const char *name, const __u32 *buf, size_t len, FILE *f)
 }
 
 static const struct orng_device_info *
-write_devinfo(const struct orng_device_info *devinfo, int with_scancodes, FILE *f)
+write_devinfo(const char *cname, const struct orng_device_info *devinfo, int with_scancodes, FILE *f)
 {
   size_t i;
   int firstrow;
@@ -377,7 +378,12 @@ write_devinfo(const struct orng_device_info *devinfo, int with_scancodes, FILE *
              "\t\t}", devinfo->id.bustype, devinfo->id.vendor,
              devinfo->id.product, devinfo->id.version);
 
-  /* device name */
+  /* canonical and device name */
+
+  if (cname) {
+    fprintf(f, ",\n"
+               "\t\t.cname = \"%s\"", cname);
+  }
 
   if (devinfo->name) {
     fprintf(f, ",\n"
@@ -520,22 +526,60 @@ write_devinfo(const struct orng_device_info *devinfo, int with_scancodes, FILE *
   return devinfo;
 }
 
+static char *
+cname_of_dev(const char *dev, const char *devname)
+{
+  char *pos;
+  size_t devlen = strlen(dev);
+  size_t devnamelen = strlen(devname);
+
+  char *cname = malloc(devlen + sizeof('-') + devnamelen + sizeof('\0'));
+
+  if (!cname) {
+    perror("malloc");
+    goto err_malloc;
+  }
+
+  pos = ((char*)memcpy(cname, dev, devlen)) + devlen;
+  *(pos++) = '-';
+  pos = ((char*)memcpy(pos, devname, devnamelen)) + devnamelen;
+  *(pos++) = '\0';
+
+  while (pos > cname) {
+    --pos;
+    if (isspace(*pos))
+      *pos = '_';
+    else
+      *pos = tolower(*pos);
+  }
+
+  return pos;
+
+err_malloc:
+    return NULL;
+}
+
 int
 main(int argc, char *argv[])
 {
   static const char optstring[] =
-    "i:s" /* input file */;
+    "d:i:s" /* device string and input file */;
 
+  const char *dev = NULL;
   const char *in = NULL;
   int with_scancodes = 0;
   int opt;
   int infd;
   struct orng_device_info devinfo;
+  char *cname;
   int res;
 
   while ((opt = getopt(argc, argv, optstring)) != -1) {
 
     switch (opt) {
+      case 'd':
+        dev = optarg;
+        break;
       case 'i':
         in = optarg;
         break;
@@ -547,8 +591,13 @@ main(int argc, char *argv[])
     }
   }
 
+  if (!dev) {
+    fprintf(stderr, "No device name given. Specify with '-d <string>'\n");
+    goto err_in;
+  }
+
   if (!in) {
-    fprintf(stderr, "No input file given.\n");
+    fprintf(stderr, "No input file given.  Specify with '-i <filename>'\n");
     goto err_in;
   }
 
@@ -565,7 +614,12 @@ main(int argc, char *argv[])
     goto err_read_devinfo;
   }
 
-  if (!write_devinfo(&devinfo, with_scancodes, stdout)) {
+  cname = cname_of_dev(dev, devinfo.name);
+
+  if (!cname)
+    goto err_cname_of_dev;
+
+  if (!write_devinfo(cname, &devinfo, with_scancodes, stdout)) {
     goto err_write_devinfo;
   }
 
@@ -578,9 +632,13 @@ main(int argc, char *argv[])
     /* don't fail */
   }
 
+  free(cname);
+
   exit(EXIT_SUCCESS);
 
 err_write_devinfo:
+  free(cname);
+err_cname_of_dev:
 err_read_devinfo:
 err_open:
 err_in:
