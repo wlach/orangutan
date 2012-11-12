@@ -119,7 +119,7 @@ read_devinfo(struct orng_device_info *devinfo, int with_scancodes, int fd)
     /* limits */
 
     for (i = 0; i <= ABS_MAX; ++i) {
-      if (devinfo->absbit[i/8] & (i%8)) {
+      if (TEST_ARRAY_BIT(devinfo->absbit, i)) {
         if (ioctl(fd, EVIOCGABS(i), devinfo->absinfo+i) < 0) {
           fprintf(stderr, "ioctl(EVIOCGABS(%d)): %s\n", i, strerror(errno));
           goto err_ioctl;
