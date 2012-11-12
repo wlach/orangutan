@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+#include <ctype.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <stdio.h>
@@ -118,9 +119,9 @@ read_devinfo(struct orng_device_info *devinfo, int with_scancodes, int fd)
     /* limits */
 
     for (i = 0; i <= ABS_MAX; ++i) {
-      if (devinfo->absbit[i/8] & (i%8)) {
+      if (TEST_ARRAY_BIT(devinfo->absbit, i)) {
         if (ioctl(fd, EVIOCGABS(i), devinfo->absinfo+i) < 0) {
-          fprintf(stderr, "ioctl(EVIOCGABS(%lu)): %s\n", strerror(errno), i);
+          fprintf(stderr, "ioctl(EVIOCGABS(%d)): %s\n", i, strerror(errno));
           goto err_ioctl;
         }
       }
@@ -228,7 +229,7 @@ read_devinfo(struct orng_device_info *devinfo, int with_scancodes, int fd)
     }
   } else if (errno != ENOENT) {
     fprintf(stderr, "ioctl(EVIOCGPHYS(%lu)): %s\n",
-            (unsigned int)sizeof(buf), strerror(errno));
+            (unsigned long)sizeof(buf), strerror(errno));
     goto err_ioctl;
   }
 
@@ -249,7 +250,7 @@ read_devinfo(struct orng_device_info *devinfo, int with_scancodes, int fd)
     }
   } else if (errno != ENOENT) {
     fprintf(stderr, "ioctl(EVIOCGPHYS(%lu)): %s\n",
-            (unsigned int)sizeof(buf), strerror(errno));
+            (unsigned long)sizeof(buf), strerror(errno));
     goto err_ioctl;
   }
 
@@ -270,7 +271,7 @@ read_devinfo(struct orng_device_info *devinfo, int with_scancodes, int fd)
     }
   } else if (errno != ENOENT) {
     fprintf(stderr, "ioctl(EVIOCGUNIQ(%lu)): %s\n",
-            (unsigned int)sizeof(buf), strerror(errno));
+            (unsigned long)sizeof(buf), strerror(errno));
     goto err_ioctl;
   }
 
@@ -355,7 +356,7 @@ write_u32_buf(const char *name, const __u32 *buf, size_t len, FILE *f)
 }
 
 static const struct orng_device_info *
-write_devinfo(const struct orng_device_info *devinfo, int with_scancodes, FILE *f)
+write_devinfo(const char *cname, const struct orng_device_info *devinfo, int with_scancodes, FILE *f)
 {
   size_t i;
   int firstrow;
@@ -370,14 +371,19 @@ write_devinfo(const struct orng_device_info *devinfo, int with_scancodes, FILE *
   /* device identifier */
 
   fprintf(f, "\t\t.id = {\n"
-             "\t\t\t.bustype = %lu,\n"
-             "\t\t\t.vendor = %lu,\n"
-             "\t\t\t.product = %lu,\n"
-             "\t\t\t.version = %lu\n"
+             "\t\t\t.bustype = %u,\n"
+             "\t\t\t.vendor = %u,\n"
+             "\t\t\t.product = %u,\n"
+             "\t\t\t.version = %u\n"
              "\t\t}", devinfo->id.bustype, devinfo->id.vendor,
              devinfo->id.product, devinfo->id.version);
 
-  /* device name */
+  /* canonical and device name */
+
+  if (cname) {
+    fprintf(f, ",\n"
+               "\t\t.cname = \"%s\"", cname);
+  }
 
   if (devinfo->name) {
     fprintf(f, ",\n"
@@ -449,7 +455,7 @@ write_devinfo(const struct orng_device_info *devinfo, int with_scancodes, FILE *
     fprintf(f, ",\n"
                "\t\t.rep = {\n"
                "\t\t\t%ld, %ld\n"
-               "\t\t}", devinfo->rep[0], devinfo->rep[1]);
+               "\t\t}", (long)devinfo->rep[0], (long)devinfo->rep[1]);
   }
 
   /* state */
@@ -491,7 +497,9 @@ write_devinfo(const struct orng_device_info *devinfo, int with_scancodes, FILE *
     for (i = 0, firstrow = 1;
          i < sizeof(devinfo->absinfo)/sizeof(devinfo->absinfo[0]); ++i) {
       if (TEST_ARRAY_BIT(devinfo->absbit, i)) {
-        if (!firstrow) {
+        if (firstrow) {
+          firstrow = 0;
+        } else {
           fprintf(f, ",");
         }
         fprintf(f, "\n\t\t\t[%lu] = {\n"
@@ -506,9 +514,6 @@ write_devinfo(const struct orng_device_info *devinfo, int with_scancodes, FILE *
                    devinfo->absinfo[i].maximum, devinfo->absinfo[i].fuzz,
                    devinfo->absinfo[i].flat, devinfo->absinfo[i].resolution);
       }
-      if (firstrow) {
-        firstrow = 0;
-      }
     }
     fprintf(f, "\n"
                "\t\t}");
@@ -520,22 +525,60 @@ write_devinfo(const struct orng_device_info *devinfo, int with_scancodes, FILE *
   return devinfo;
 }
 
+static char *
+cname_of_dev(const char *dev, const char *devname)
+{
+  char *pos;
+  size_t devlen = strlen(dev);
+  size_t devnamelen = strlen(devname);
+
+  char *cname = malloc(devlen + sizeof('-') + devnamelen + sizeof('\0'));
+
+  if (!cname) {
+    perror("malloc");
+    goto err_malloc;
+  }
+
+  pos = ((char*)memcpy(cname, dev, devlen)) + devlen;
+  *(pos++) = '-';
+  pos = ((char*)memcpy(pos, devname, devnamelen)) + devnamelen;
+  *(pos++) = '\0';
+
+  while (pos > cname) {
+    --pos;
+    if (isspace(*pos))
+      *pos = '_';
+    else
+      *pos = tolower(*pos);
+  }
+
+  return pos;
+
+err_malloc:
+    return NULL;
+}
+
 int
 main(int argc, char *argv[])
 {
   static const char optstring[] =
-    "i:s" /* input file */;
+    "d:i:s" /* device string and input file */;
 
+  const char *dev = NULL;
   const char *in = NULL;
   int with_scancodes = 0;
   int opt;
   int infd;
   struct orng_device_info devinfo;
+  char *cname;
   int res;
 
   while ((opt = getopt(argc, argv, optstring)) != -1) {
 
     switch (opt) {
+      case 'd':
+        dev = optarg;
+        break;
       case 'i':
         in = optarg;
         break;
@@ -547,8 +590,13 @@ main(int argc, char *argv[])
     }
   }
 
+  if (!dev) {
+    fprintf(stderr, "No device name given. Specify with '-d <string>'\n");
+    goto err_in;
+  }
+
   if (!in) {
-    fprintf(stderr, "No input file given.\n");
+    fprintf(stderr, "No input file given.  Specify with '-i <filename>'\n");
     goto err_in;
   }
 
@@ -565,7 +613,12 @@ main(int argc, char *argv[])
     goto err_read_devinfo;
   }
 
-  if (!write_devinfo(&devinfo, with_scancodes, stdout)) {
+  cname = cname_of_dev(dev, devinfo.name);
+
+  if (!cname)
+    goto err_cname_of_dev;
+
+  if (!write_devinfo(cname, &devinfo, with_scancodes, stdout)) {
     goto err_write_devinfo;
   }
 
@@ -578,9 +631,13 @@ main(int argc, char *argv[])
     /* don't fail */
   }
 
+  free(cname);
+
   exit(EXIT_SUCCESS);
 
 err_write_devinfo:
+  free(cname);
+err_cname_of_dev:
 err_read_devinfo:
 err_open:
 err_in:

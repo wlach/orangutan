@@ -23,6 +23,9 @@
 
 #define ORNG_NDEVICES  16
 
+char *devices[ORNG_NDEVICES];
+int   ndevices = ARRAY_SIZE(devices);
+
 char *names[ORNG_NDEVICES];
 int   nnames = ARRAY_SIZE(names);
 
@@ -31,6 +34,7 @@ __u16 vendor = 0;
 __u16 product = 0;
 __u16 version = 0;
 
+module_param_array(devices, charp, &ndevices, S_IRUGO);
 module_param_array(names, charp, &nnames, S_IRUGO);
 
 module_param(bustype, ushort, S_IRUGO);
@@ -258,7 +262,23 @@ orng_init(void)
   int res;
   int i;
 
-  if (names[0]) {
+  if (devices[0]) {
+    for (i = 0; i < ndevices; ++i) {
+      devinfo = orng_find_device_by_cname(devices[i]);
+
+      if (!devinfo) {
+        res = -EINVAL;
+        goto cleanup_devices;
+      }
+
+      indev[i] = add_device(devinfo);
+
+      if (!indev[i]) {
+        res = -ENOMEM;
+        goto cleanup_devices;
+      }
+    }
+  } else if (names[0]) {
     for (i = 0; i < nnames; ++i) {
       devinfo = orng_find_device_by_name(names[i]);
 
