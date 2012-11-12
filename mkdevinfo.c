@@ -497,7 +497,9 @@ write_devinfo(const char *cname, const struct orng_device_info *devinfo, int wit
     for (i = 0, firstrow = 1;
          i < sizeof(devinfo->absinfo)/sizeof(devinfo->absinfo[0]); ++i) {
       if (TEST_ARRAY_BIT(devinfo->absbit, i)) {
-        if (!firstrow) {
+        if (firstrow) {
+          firstrow = 0;
+        } else {
           fprintf(f, ",");
         }
         fprintf(f, "\n\t\t\t[%lu] = {\n"
@@ -511,9 +513,6 @@ write_devinfo(const char *cname, const struct orng_device_info *devinfo, int wit
                    devinfo->absinfo[i].value, devinfo->absinfo[i].minimum,
                    devinfo->absinfo[i].maximum, devinfo->absinfo[i].fuzz,
                    devinfo->absinfo[i].flat, devinfo->absinfo[i].resolution);
-      }
-      if (firstrow) {
-        firstrow = 0;
       }
     }
     fprintf(f, "\n"
