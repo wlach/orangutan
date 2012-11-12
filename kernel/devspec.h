@@ -50,7 +50,7 @@
 			[48] = {
 				.value = 0,
 				.minimum = 0,
-				.maximum = 0,
+				.maximum = 255,
 				.fuzz = 0,
 				.flat = 0,
 				.resolution = 0
@@ -58,7 +58,7 @@
 			[50] = {
 				.value = 0,
 				.minimum = 0,
-				.maximum = 0,
+				.maximum = 15,
 				.fuzz = 0,
 				.flat = 0,
 				.resolution = 0
@@ -90,7 +90,7 @@
 			[57] = {
 				.value = 0,
 				.minimum = 0,
-				.maximum = 0,
+				.maximum = 10,
 				.fuzz = 0,
 				.flat = 0,
 				.resolution = 0
@@ -163,9 +163,9 @@
 		},
 		.absinfo = {
 			[40] = {
-				.value = 0,
+				.value = 42,
 				.minimum = 0,
-				.maximum = 0,
+				.maximum = 65535,
 				.fuzz = 0,
 				.flat = 0,
 				.resolution = 0
@@ -192,7 +192,7 @@
 			[25] = {
 				.value = 0,
 				.minimum = 0,
-				.maximum = 0,
+				.maximum = 65535,
 				.fuzz = 0,
 				.flat = 0,
 				.resolution = 0
@@ -217,15 +217,15 @@
 		},
 		.absinfo = {
 			[0] = {
-				.value = 0,
-				.minimum = 0,
-				.maximum = 0,
+				.value = -39,
+				.minimum = -5760,
+				.maximum = 5760,
 				.fuzz = 0,
 				.flat = 0,
 				.resolution = 0
 			},
 			[1] = {
-				.value = 13,
+				.value = 39,
 				.minimum = -5760,
 				.maximum = 5760,
 				.fuzz = 0,
@@ -241,7 +241,7 @@
 				.resolution = 0
 			},
 			[3] = {
-				.value = 15409,
+				.value = 14084,
 				.minimum = 0,
 				.maximum = 23040,
 				.fuzz = 0,
@@ -249,7 +249,7 @@
 				.resolution = 0
 			},
 			[4] = {
-				.value = -127,
+				.value = -253,
 				.minimum = -11520,
 				.maximum = 11520,
 				.fuzz = 0,
@@ -257,7 +257,7 @@
 				.resolution = 0
 			},
 			[5] = {
-				.value = -127,
+				.value = -190,
 				.minimum = -5760,
 				.maximum = 5760,
 				.fuzz = 0,
@@ -273,25 +273,25 @@
 				.resolution = 0
 			},
 			[8] = {
-				.value = 0,
-				.minimum = 0,
-				.maximum = 0,
+				.value = 3,
+				.minimum = -32768,
+				.maximum = 3,
 				.fuzz = 0,
 				.flat = 0,
 				.resolution = 0
 			},
 			[10] = {
 				.value = 0,
-				.minimum = 0,
-				.maximum = 0,
+				.minimum = -32768,
+				.maximum = 32767,
 				.fuzz = 0,
 				.flat = 0,
 				.resolution = 0
 			},
 			[16] = {
 				.value = 0,
-				.minimum = 0,
-				.maximum = 0,
+				.minimum = -32768,
+				.maximum = 32767,
 				.fuzz = 0,
 				.flat = 0,
 				.resolution = 0
@@ -361,7 +361,7 @@
 			.product = 1,
 			.version = 256
 		},
-		.cname = "panda-gpio-keys",
+		.cname = "pandaboard-gpio-keys",
 		.name = "gpio-keys",
 		.phys = "gpio-keys/input0",
 		.evbit = {
@@ -402,7 +402,7 @@
 			.product = 0,
 			.version = 0
 		},
-		.cname = "panda-panda_headset_jack",
+		.cname = "pandaboard-panda_headset_jack",
 		.name = "Panda Headset Jack",
 		.phys = "ALSA",
 		.evbit = {
