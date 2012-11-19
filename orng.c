@@ -24,7 +24,11 @@
 #include <errno.h>
 #include <assert.h>
 
-#include "inputdefs.h"
+#ifdef NDK_BUILD
+#include "linux_input.h"
+#else
+#include <linux/input.h>
+#endif
 
 #define FROYO_EVENT_PROTO 65536
 #define ICS_EVENT_PROTO 65537
