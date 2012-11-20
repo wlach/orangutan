@@ -239,29 +239,29 @@ void execute_pinch(int fd, uint32_t device_flags, int touch1_x1,
 
 }
 
-uint32_t figureOutEventsDeviceReports(int fd) {
+uint32_t figure_out_events_device_reports(int fd) {
 
-    uint32_t deviceClasses = 0;
+    uint32_t device_classes = 0;
 
-    uint8_t keyBitmask[(KEY_MAX + 1) / 8];
-    uint8_t absBitmask[(ABS_MAX + 1) / 8];
+    uint8_t key_bitmask[(KEY_MAX + 1) / 8];
+    uint8_t abs_bitmask[(ABS_MAX + 1) / 8];
 
-    memset(keyBitmask, 0, sizeof(keyBitmask));
-    memset(absBitmask, 0, sizeof(absBitmask));
+    memset(key_bitmask, 0, sizeof(key_bitmask));
+    memset(abs_bitmask, 0, sizeof(abs_bitmask));
 
-    ioctl(fd, EVIOCGBIT(EV_KEY, sizeof(keyBitmask)), keyBitmask);
-    ioctl(fd, EVIOCGBIT(EV_ABS, sizeof(absBitmask)), absBitmask);
+    ioctl(fd, EVIOCGBIT(EV_KEY, sizeof(key_bitmask)), key_bitmask);
+    ioctl(fd, EVIOCGBIT(EV_ABS, sizeof(abs_bitmask)), abs_bitmask);
 
     // See if this is a touch pad.
     // Is this a new modern multi-touch driver?
-    if (test_bit(ABS_MT_POSITION_X, absBitmask)
-            && test_bit(ABS_MT_POSITION_Y, absBitmask)) {
+    if (test_bit(ABS_MT_POSITION_X, abs_bitmask)
+            && test_bit(ABS_MT_POSITION_Y, abs_bitmask)) {
         // Some joysticks such as the PS3 controller report axes that conflict
         // with the ABS_MT range.  Try to confirm that the device really is
         // a touch screen.
         // Mozilla Bug 741038 - support GB touchscreen drivers
         //if (test_bit(BTN_TOUCH, device->keyBitmask) || !haveGamepadButtons) {
-            deviceClasses |= INPUT_DEVICE_CLASS_TOUCH | INPUT_DEVICE_CLASS_TOUCH_MT;
+            device_classes |= INPUT_DEVICE_CLASS_TOUCH | INPUT_DEVICE_CLASS_TOUCH_MT;
             char device_name[80];
 
             if(ioctl(fd, EVIOCGNAME(sizeof(device_name) - 1), &device_name) < 1) {
@@ -272,17 +272,17 @@ uint32_t figureOutEventsDeviceReports(int fd) {
             // the atmel touchscreen has a weird protocol which requires MT_SYN events
             // to be sent after every touch
             if(strcmp(device_name, "atmel-touchscreen") == 0) {
-              deviceClasses |= INPUT_DEVICE_CLASS_TOUCH_MT_SYNC;
+              device_classes |= INPUT_DEVICE_CLASS_TOUCH_MT_SYNC;
             }
         //}
     // Is this an old style single-touch driver?
-    } else if (test_bit(BTN_TOUCH, keyBitmask)
-            && test_bit(ABS_X, absBitmask)
-            && test_bit(ABS_Y, absBitmask)) {
-        deviceClasses |= INPUT_DEVICE_CLASS_TOUCH;
+    } else if (test_bit(BTN_TOUCH, key_bitmask)
+            && test_bit(ABS_X, abs_bitmask)
+            && test_bit(ABS_Y, abs_bitmask)) {
+        device_classes |= INPUT_DEVICE_CLASS_TOUCH;
     }
 
-    return deviceClasses;
+    return device_classes;
 
 }
 
@@ -307,7 +307,7 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    uint32_t device_flags = figureOutEventsDeviceReports(fd);
+    uint32_t device_flags = figure_out_events_device_reports(fd);
 
     FILE *f = fopen(argv[2], "r");
     if (!f) {
