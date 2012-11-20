@@ -51,8 +51,19 @@ void write_event(int fd, int type, int code, int value)
   event.value = value;
   usleep(1000);
 
-  int ret = write(fd, &event, sizeof(event));
-  if(ret < sizeof(event)) {
+  ssize_t ret = 0;
+  unsigned char *buf = (unsigned char*)&event;
+  ssize_t buflen = (ssize_t)sizeof(event);
+
+  do {
+    ret = write(fd, buf, buflen);
+    if (ret > 0) {
+      buf += ret;
+      buflen -= ret;
+    }
+  } while (((ret >= 0) && buflen) || ((ret < 0) && (errno == EINTR)));
+
+  if (ret < 0) {
     fprintf(stderr, "write event failed, %s\n", strerror(errno));
     return;
   }
