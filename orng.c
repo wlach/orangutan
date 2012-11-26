@@ -243,8 +243,8 @@ uint32_t figure_out_events_device_reports(int fd) {
 
     uint32_t device_classes = 0;
 
-    uint8_t key_bitmask[(KEY_MAX + 1) / 8];
-    uint8_t abs_bitmask[(ABS_MAX + 1) / 8];
+    uint8_t key_bitmask[(KEY_MAX + 1) / 8 + !!((KEY_MAX + 1) % 8)];
+    uint8_t abs_bitmask[(ABS_MAX + 1) / 8 + !!((ABS_MAX + 1) % 8)];
 
     memset(key_bitmask, 0, sizeof(key_bitmask));
     memset(abs_bitmask, 0, sizeof(abs_bitmask));
