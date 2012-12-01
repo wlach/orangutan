@@ -87,10 +87,18 @@ and load the module with
 
 Module parameters are either
 
-    'names' - an comma-separated list of up tp 16 device names, or
+    'names' - a comma-separated list of up to 16 device names (corresponding
+              to the 'name' field in the kernel device specification), or
+    'devices' - a comma-separated list of up to 16 device names (corresponding
+              to the 'cname' field in the kernel device specification), or
     'bustype', 'vendor', 'product', and 'version' - a device id.
 
 Names take precedence over device ids.
+
+For example, to load a simulated 720p touchscreen on the pandaboard, you would
+load the orangutan kernel module with:
+
+    adb shell insmod /system/lib/modules/orng.ko devices=generic-720p_touchscreen
 
 # Using
 
