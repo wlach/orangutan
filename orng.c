@@ -185,14 +185,14 @@ void execute_drag(int fd, uint32_t device_flags, int start_x,
 }
 
 void execute_tap(int fd, uint32_t device_flags, int x, int y,
-                 int num_times)
+                 int num_times, int duration_msec)
 {
   int i;
 
-  for (i=0;i<num_times;i++) {
+  for (i=0; i<num_times; i++) {
     // press
     execute_press(fd, device_flags, x, y);
-    execute_sleep(100);
+    execute_sleep(duration_msec);
 
     // release
     execute_release(fd, device_flags);
@@ -339,8 +339,8 @@ int main(int argc, char *argv[])
       }
 
       if (strcmp(cmd, "tap") == 0) {
-        assert(num_args == 3);
-        execute_tap(fd, device_flags, args[0], args[1], args[2]);
+        assert(num_args == 4);
+        execute_tap(fd, device_flags, args[0], args[1], args[2], args[3]);
       } else if (strcmp(cmd, "drag") == 0) {
         assert(num_args == 6);
         execute_drag(fd, device_flags, args[0], args[1], args[2],

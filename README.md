@@ -111,7 +111,7 @@ gestures. Currently the following are supported:
 
 * Tap: Simulates a sequence of taps. Syntax:
 
-    tap [x] [y] [num times]
+    tap [x] [y] [num times] [duration of each tap in msec]
 
 * Sleep: Sleeps for a specified period of time. Syntax:
 
@@ -120,7 +120,7 @@ gestures. Currently the following are supported:
 An example script file which fairly simulates a double tap, then a pan gesture,
 then a sleep for two seconds on a Galaxy Nexus in landscape mode might be:
 
-    tap 175 630 2
+    tap 175 630 2 200
     drag 200 200 600 200 10 100
     sleep 2000
 
