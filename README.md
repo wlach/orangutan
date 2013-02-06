@@ -87,10 +87,18 @@ and load the module with
 
 Module parameters are either
 
-    'names' - an comma-separated list of up tp 16 device names, or
+    'names' - a comma-separated list of up to 16 device names (corresponding
+              to the 'name' field in the kernel device specification), or
+    'devices' - a comma-separated list of up to 16 device names (corresponding
+              to the 'cname' field in the kernel device specification), or
     'bustype', 'vendor', 'product', and 'version' - a device id.
 
 Names take precedence over device ids.
+
+For example, to load a simulated 720p touchscreen on the pandaboard, you would
+load the orangutan kernel module with:
+
+    adb shell insmod /system/lib/modules/orng.ko devices=generic-720p_touchscreen
 
 # Using
 
@@ -103,7 +111,7 @@ gestures. Currently the following are supported:
 
 * Tap: Simulates a sequence of taps. Syntax:
 
-    tap [x] [y] [num times]
+    tap [x] [y] [num times] [duration of each tap in msec]
 
 * Sleep: Sleeps for a specified period of time. Syntax:
 
@@ -112,7 +120,7 @@ gestures. Currently the following are supported:
 An example script file which fairly simulates a double tap, then a pan gesture,
 then a sleep for two seconds on a Galaxy Nexus in landscape mode might be:
 
-    tap 175 630 2
+    tap 175 630 2 200
     drag 200 200 600 200 10 100
     sleep 2000
 
