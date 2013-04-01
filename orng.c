@@ -328,6 +328,10 @@ int main(int argc, char *argv[])
 
     line = malloc(sizeof(char)*MAX_COMMAND_LEN);
     while (fgets(line, MAX_COMMAND_LEN, f) != NULL) {
+      // Support comments in orangutan scripts with lines starting with "#".
+      if (strlen(line) > 0 && line[0] == "#")
+        continue;
+
       cmd = strtok(line, " ");
 
       num_args = 0;
