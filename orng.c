@@ -54,90 +54,90 @@ static int global_tracking_id = 1;
 
 void write_event(int fd, int type, int code, int value)
 {
-  struct input_event event;
-  memset(&event, 0, sizeof(event));
+    struct input_event event;
+    memset(&event, 0, sizeof(event));
 
-  event.type = type;
-  event.code = code;
+    event.type = type;
+    event.code = code;
 
-  event.value = value;
-  usleep(1000);
+    event.value = value;
+    usleep(1000);
 
-  ssize_t ret = 0;
-  unsigned char *buf = (unsigned char*)&event;
-  ssize_t buflen = (ssize_t)sizeof(event);
+    ssize_t ret = 0;
+    unsigned char *buf = (unsigned char*)&event;
+    ssize_t buflen = (ssize_t)sizeof(event);
 
-  do {
-    ret = write(fd, buf, buflen);
-    if (ret > 0) {
-      buf += ret;
-      buflen -= ret;
+    do {
+        ret = write(fd, buf, buflen);
+        if (ret > 0) {
+            buf += ret;
+            buflen -= ret;
+        }
+    } while (((ret >= 0) && buflen) || ((ret < 0) && (errno == EINTR)));
+
+    if (ret < 0) {
+        fprintf(stderr, "write event failed, %s\n", strerror(errno));
+        return;
     }
-  } while (((ret >= 0) && buflen) || ((ret < 0) && (errno == EINTR)));
-
-  if (ret < 0) {
-    fprintf(stderr, "write event failed, %s\n", strerror(errno));
-    return;
-  }
 }
 
 void execute_sleep(int duration_msec)
 {
-  usleep(duration_msec*1000);
+    usleep(duration_msec*1000);
 }
 
 void add_mt_tracking_id(int fd, uint32_t device_flags, int id)
 {
-  write_event(fd, EV_ABS, ABS_MT_TRACKING_ID, id);
+    write_event(fd, EV_ABS, ABS_MT_TRACKING_ID, id);
 }
 
 void change_mt_slot(int fd, uint32_t device_flags, int slot)
 {
-  write_event(fd, EV_ABS, ABS_MT_SLOT, slot);
+    write_event(fd, EV_ABS, ABS_MT_SLOT, slot);
 }
 
 void remove_mt_tracking_id(int fd, uint32_t device_flags, int slot)
 {
-  write_event(fd, EV_ABS, ABS_MT_SLOT, slot);
-  write_event(fd, EV_ABS, ABS_MT_TRACKING_ID, -1);
-  write_event(fd, EV_SYN, SYN_REPORT, 0);
+    write_event(fd, EV_ABS, ABS_MT_SLOT, slot);
+    write_event(fd, EV_ABS, ABS_MT_TRACKING_ID, -1);
+    write_event(fd, EV_SYN, SYN_REPORT, 0);
 }
 
 void execute_press(int fd, uint32_t device_flags, int x, int y)
 {
-  if (device_flags & INPUT_DEVICE_CLASS_TOUCH_MT) {
-    write_event(fd, EV_ABS, ABS_MT_TOUCH_MAJOR, 32);
-    write_event(fd, EV_ABS, ABS_MT_WIDTH_MAJOR, 4);
-    write_event(fd, EV_ABS, ABS_MT_PRESSURE, 90);
-    write_event(fd, EV_ABS, ABS_MT_POSITION_X, x);
-    write_event(fd, EV_ABS, ABS_MT_POSITION_Y, y);
-    if (device_flags & INPUT_DEVICE_CLASS_TOUCH_MT_SYNC)
-      write_event(fd, EV_SYN, SYN_MT_REPORT, 0);
-    write_event(fd, EV_SYN, SYN_REPORT, 0);
-  } else if (device_flags & INPUT_DEVICE_CLASS_TOUCH) {
-    write_event(fd, EV_ABS, ABS_X, x);
-    write_event(fd, EV_ABS, ABS_Y, y);
-    write_event(fd, EV_KEY, BTN_TOUCH, 1);
-    write_event(fd, EV_SYN, SYN_REPORT, 0);
-  }
+    if (device_flags & INPUT_DEVICE_CLASS_TOUCH_MT) {
+        write_event(fd, EV_ABS, ABS_MT_TOUCH_MAJOR, 32);
+        write_event(fd, EV_ABS, ABS_MT_WIDTH_MAJOR, 4);
+        write_event(fd, EV_ABS, ABS_MT_PRESSURE, 90);
+        write_event(fd, EV_ABS, ABS_MT_POSITION_X, x);
+        write_event(fd, EV_ABS, ABS_MT_POSITION_Y, y);
+        if (device_flags & INPUT_DEVICE_CLASS_TOUCH_MT_SYNC)
+            write_event(fd, EV_SYN, SYN_MT_REPORT, 0);
+        write_event(fd, EV_SYN, SYN_REPORT, 0);
+    } else if (device_flags & INPUT_DEVICE_CLASS_TOUCH) {
+        write_event(fd, EV_ABS, ABS_X, x);
+        write_event(fd, EV_ABS, ABS_Y, y);
+        write_event(fd, EV_KEY, BTN_TOUCH, 1);
+        write_event(fd, EV_SYN, SYN_REPORT, 0);
+    }
 }
 
 void execute_move(int fd, uint32_t device_flags, int x, int y)
 {
-  if (device_flags & INPUT_DEVICE_CLASS_TOUCH_MT) {
-    write_event(fd, EV_ABS, ABS_MT_TOUCH_MAJOR, 32);
-    write_event(fd, EV_ABS, ABS_MT_WIDTH_MAJOR, 4);
-    write_event(fd, EV_ABS, ABS_MT_POSITION_X, x);
-    write_event(fd, EV_ABS, ABS_MT_POSITION_Y, y);
-    write_event(fd, EV_ABS, ABS_MT_PRESSURE, 90);
-    if (device_flags & INPUT_DEVICE_CLASS_TOUCH_MT_SYNC)
-      write_event(fd, EV_SYN, SYN_MT_REPORT, 0);
-    write_event(fd, EV_SYN, SYN_REPORT, 0);
-  } else if (device_flags & INPUT_DEVICE_CLASS_TOUCH) {
-    write_event(fd, EV_ABS, ABS_X, x);
-    write_event(fd, EV_ABS, ABS_Y, y);
-    write_event(fd, EV_SYN, SYN_REPORT, 0);
-  }
+    if (device_flags & INPUT_DEVICE_CLASS_TOUCH_MT) {
+        write_event(fd, EV_ABS, ABS_MT_TOUCH_MAJOR, 32);
+        write_event(fd, EV_ABS, ABS_MT_WIDTH_MAJOR, 4);
+        write_event(fd, EV_ABS, ABS_MT_POSITION_X, x);
+        write_event(fd, EV_ABS, ABS_MT_POSITION_Y, y);
+        write_event(fd, EV_ABS, ABS_MT_PRESSURE, 90);
+        if (device_flags & INPUT_DEVICE_CLASS_TOUCH_MT_SYNC)
+            write_event(fd, EV_SYN, SYN_MT_REPORT, 0);
+        write_event(fd, EV_SYN, SYN_REPORT, 0);
+    } else if (device_flags & INPUT_DEVICE_CLASS_TOUCH) {
+        write_event(fd, EV_ABS, ABS_X, x);
+        write_event(fd, EV_ABS, ABS_Y, y);
+        write_event(fd, EV_SYN, SYN_REPORT, 0);
+    }
 }
 
 void execute_move_unsynced(int fd, uint32_t device_flags,
@@ -149,15 +149,15 @@ void execute_move_unsynced(int fd, uint32_t device_flags,
 
 void execute_release(int fd, uint32_t device_flags)
 {
-  if (device_flags & INPUT_DEVICE_CLASS_TOUCH_MT) {
-    write_event(fd, EV_ABS, ABS_MT_PRESSURE,0);
-    if (device_flags & INPUT_DEVICE_CLASS_TOUCH_MT_SYNC)
-      write_event(fd, EV_SYN, SYN_MT_REPORT, 0);
-    write_event(fd, EV_SYN, SYN_REPORT, 0);
-  } else if (device_flags & INPUT_DEVICE_CLASS_TOUCH) {
-    write_event(fd, EV_KEY, BTN_TOUCH, 0);
-    write_event(fd, EV_SYN, SYN_REPORT, 0);
-  }
+    if (device_flags & INPUT_DEVICE_CLASS_TOUCH_MT) {
+        write_event(fd, EV_ABS, ABS_MT_PRESSURE,0);
+        if (device_flags & INPUT_DEVICE_CLASS_TOUCH_MT_SYNC)
+            write_event(fd, EV_SYN, SYN_MT_REPORT, 0);
+        write_event(fd, EV_SYN, SYN_REPORT, 0);
+    } else if (device_flags & INPUT_DEVICE_CLASS_TOUCH) {
+        write_event(fd, EV_KEY, BTN_TOUCH, 0);
+        write_event(fd, EV_SYN, SYN_REPORT, 0);
+    }
 }
 
 void execute_drag(int fd, uint32_t device_flags, int start_x,
@@ -173,8 +173,8 @@ void execute_drag(int fd, uint32_t device_flags, int start_x,
 
     // drag
     for (i=0; i<num_steps; i++) {
-      execute_sleep(sleeptime);
-      execute_move(fd, device_flags, start_x+delta[0]*i, start_y+delta[1]*i);
+        execute_sleep(sleeptime);
+        execute_move(fd, device_flags, start_x+delta[0]*i, start_y+delta[1]*i);
     }
 
     // release
@@ -187,20 +187,20 @@ void execute_drag(int fd, uint32_t device_flags, int start_x,
 void execute_tap(int fd, uint32_t device_flags, int x, int y,
                  int num_times, int duration_msec)
 {
-  int i;
+    int i;
 
-  for (i=0; i<num_times; i++) {
-    // press
-    execute_press(fd, device_flags, x, y);
-    execute_sleep(duration_msec);
+    for (i=0; i<num_times; i++) {
+        // press
+        execute_press(fd, device_flags, x, y);
+        execute_sleep(duration_msec);
 
-    // release
-    execute_release(fd, device_flags);
-    execute_sleep(100);
+        // release
+        execute_release(fd, device_flags);
+        execute_sleep(100);
 
-    // wait
-    execute_sleep(50);
-  }
+        // wait
+        execute_sleep(50);
+    }
 }
 
 void execute_pinch(int fd, uint32_t device_flags, int touch1_x1,
@@ -224,15 +224,15 @@ void execute_pinch(int fd, uint32_t device_flags, int touch1_x1,
 
     // drag
     for (i=0; i<num_steps; i++) {
-      execute_sleep(sleeptime);
+        execute_sleep(sleeptime);
 
-      change_mt_slot(fd, device_flags, 0);
-      execute_move(fd, device_flags, touch1_x1+delta1[0]*i, touch1_y1+delta1[1]*i);
+        change_mt_slot(fd, device_flags, 0);
+        execute_move(fd, device_flags, touch1_x1+delta1[0]*i, touch1_y1+delta1[1]*i);
 
-      change_mt_slot(fd, device_flags, 1);
-      execute_move(fd, device_flags, touch2_x1+delta2[0]*i, touch2_y1+delta2[1]*i);
+        change_mt_slot(fd, device_flags, 1);
+        execute_move(fd, device_flags, touch2_x1+delta2[0]*i, touch2_y1+delta2[1]*i);
 
-      //write_event(fd, EV_SYN, SYN_REPORT, 0);
+        //write_event(fd, EV_SYN, SYN_REPORT, 0);
     }
 
     // release
@@ -283,7 +283,7 @@ uint32_t figure_out_events_device_reports(int fd) {
             // the atmel touchscreen has a weird protocol which requires MT_SYN events
             // to be sent after every touch
             if(strcmp(device_name, "atmel-touchscreen") == 0) {
-              device_classes |= INPUT_DEVICE_CLASS_TOUCH_MT_SYNC;
+                device_classes |= INPUT_DEVICE_CLASS_TOUCH_MT_SYNC;
             }
         //}
     // Is this an old style single-touch driver?
@@ -322,45 +322,45 @@ int main(int argc, char *argv[])
 
     FILE *f = fopen(argv[2], "r");
     if (!f) {
-      printf("Unable to read file %s", argv[1]);
-      return 1;
+        printf("Unable to read file %s", argv[1]);
+        return 1;
     }
 
     line = malloc(sizeof(char)*MAX_COMMAND_LEN);
     while (fgets(line, MAX_COMMAND_LEN, f) != NULL) {
-      // Support comments in orangutan scripts with lines starting with "#".
-      if (strlen(line) > 0 && line[0] == "#")
-        continue;
+        // Support comments in orangutan scripts with lines starting with "#".
+        if (strlen(line) > 0 && line[0] == "#")
+            continue;
 
-      cmd = strtok(line, " ");
+        cmd = strtok(line, " ");
 
-      num_args = 0;
-      while ((arg = strtok(NULL, " \n")) != NULL) {
-        assert(num_args < MAX_COMMAND_ARGS);
+        num_args = 0;
+        while ((arg = strtok(NULL, " \n")) != NULL) {
+            assert(num_args < MAX_COMMAND_ARGS);
 
-        args[num_args] = atoi(arg);
-        num_args++;
-      }
+            args[num_args] = atoi(arg);
+            num_args++;
+        }
 
-      if (strcmp(cmd, "tap") == 0) {
-        assert(num_args == 4);
-        execute_tap(fd, device_flags, args[0], args[1], args[2], args[3]);
-      } else if (strcmp(cmd, "drag") == 0) {
-        assert(num_args == 6);
-        execute_drag(fd, device_flags, args[0], args[1], args[2],
-                     args[3], args[4], args[5]);
-      } else if (strcmp(cmd, "sleep") == 0) {
-        assert(num_args == 1);
-        execute_sleep(args[0]);
-      } else if (strcmp(cmd, "pinch") == 0) {
-        assert(num_args == 10);
-        execute_pinch(fd, device_flags, args[0], args[1], args[2],
-                      args[3], args[4], args[5], args[6], args[7], args[8],
-                      args[9]);
-      } else {
-        printf("Unrecognized command: '%s'", cmd);
-        return 1;
-      }
+        if (strcmp(cmd, "tap") == 0) {
+            assert(num_args == 4);
+            execute_tap(fd, device_flags, args[0], args[1], args[2], args[3]);
+        } else if (strcmp(cmd, "drag") == 0) {
+            assert(num_args == 6);
+            execute_drag(fd, device_flags, args[0], args[1], args[2],
+                         args[3], args[4], args[5]);
+        } else if (strcmp(cmd, "sleep") == 0) {
+            assert(num_args == 1);
+            execute_sleep(args[0]);
+        } else if (strcmp(cmd, "pinch") == 0) {
+            assert(num_args == 10);
+            execute_pinch(fd, device_flags, args[0], args[1], args[2],
+                          args[3], args[4], args[5], args[6], args[7], args[8],
+                          args[9]);
+        } else {
+            printf("Unrecognized command: '%s'", cmd);
+            return 1;
+        }
     }
     free(line);
 
