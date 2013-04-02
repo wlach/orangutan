@@ -335,7 +335,7 @@ int main(int argc, char *argv[])
     cmd = strtok(line, " ");
 
     num_args = 0;
-    while ((arg = strtok(NULL, " \n")) != NULL) {
+    while ((arg = strtok(NULL, " \n;")) != NULL) {
       assert(num_args < MAX_COMMAND_ARGS);
 
       args[num_args] = atoi(arg);
