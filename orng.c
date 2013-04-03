@@ -297,6 +297,34 @@ uint32_t figure_out_events_device_reports(int fd) {
 
 }
 
+int parseComment(const char *token, int lineCount)
+{
+  if (*token == '{') {
+    char *comment = strstr(token, "}");
+    if (comment == NULL)
+      comment = strtok(NULL, "}");
+    else
+      *comment = '\0';
+    if (comment == NULL) {
+      printf("Missing '}' to end a comment block at line %d.\n", lineCount);
+      return -1;
+    }
+    printf("{}: %s%s%s\n", &token[1], (token[1] && comment[0]) ? " " : "", comment);
+    return 1;
+  }
+  return 0;
+}
+
+void checkArguments(const char *cmd, int argc, int expect, int lineCount)
+{
+  if (argc == expect)
+    return;
+
+  printf("At line %d, Command '%s' expect %d arguments, given %d.\n",
+         lineCount, cmd, expect, argc);
+  assert(0 && "Stop reading the assertion, read the previous message ...");
+}
+
 int main(int argc, char *argv[])
 {
   int i;
@@ -327,39 +355,70 @@ int main(int argc, char *argv[])
   }
 
   line = malloc(sizeof(char)*MAX_COMMAND_LEN);
+  int lineCount = 0;
   while (fgets(line, MAX_COMMAND_LEN, f) != NULL) {
-    // Support comments in orangutan scripts with lines starting with "#".
-    if (strlen(line) > 0 && line[0] == "#")
-      continue;
+    // Remove end-of-line comments.
+    char *comment = strstr(line, "#");
+    if (comment != NULL)
+      *comment = '\0';
 
-    cmd = strtok(line, " ");
+    lineCount += 1;
+    int hasNextCmd = 1;
+    char *tempLine = line;
+  commandLoop:
+    while (hasNextCmd) {
+      num_args = 0;
+      hasNextCmd = 0;
+      int errCode = 0;
 
-    num_args = 0;
-    while ((arg = strtok(NULL, " \n;")) != NULL) {
-      assert(num_args < MAX_COMMAND_ARGS);
+      // Parse {-} comments before command names.
+      do {
+        if ((cmd = strtok(tempLine, " \n")) == NULL)
+          goto commandLoop;
+        tempLine = NULL;
+      } while ((errCode = parseComment(cmd, lineCount)) == 1);
+      if (errCode < 0)
+        return 1;
 
-      args[num_args] = atoi(arg);
-      num_args++;
-    }
+      while ((arg = strtok(NULL, " \n")) != NULL) {
+        // Parse comment {-} within arguments.
+        if ((errCode = parseComment(arg, lineCount)) != 0) {
+          if (errCode < 0)
+            return 1;
+          continue;
+        }
 
-    if (strcmp(cmd, "tap") == 0) {
-      assert(num_args == 4);
-      execute_tap(fd, device_flags, args[0], args[1], args[2], args[3]);
-    } else if (strcmp(cmd, "drag") == 0) {
-      assert(num_args == 6);
-      execute_drag(fd, device_flags, args[0], args[1], args[2],
-                   args[3], args[4], args[5]);
-    } else if (strcmp(cmd, "sleep") == 0) {
-      assert(num_args == 1);
-      execute_sleep(args[0]);
-    } else if (strcmp(cmd, "pinch") == 0) {
-      assert(num_args == 10);
-      execute_pinch(fd, device_flags, args[0], args[1], args[2],
-                    args[3], args[4], args[5], args[6], args[7], args[8],
-                    args[9]);
-    } else {
-      printf("Unrecognized command: '%s'", cmd);
-      return 1;
+        // If we enter a new command, we remember the position for the next iteration.
+        if (*arg == ';') {
+          hasNextCmd = 1;
+          break;
+        }
+
+        assert(num_args < MAX_COMMAND_ARGS);
+
+        args[num_args] = atoi(arg);
+        num_args++;
+      }
+
+      if (strcmp(cmd, "tap") == 0) {
+        checkArguments(cmd, num_args, 4, lineCount);
+        execute_tap(fd, device_flags, args[0], args[1], args[2], args[3]);
+      } else if (strcmp(cmd, "drag") == 0) {
+        checkArguments(cmd, num_args, 6, lineCount);
+        execute_drag(fd, device_flags, args[0], args[1], args[2],
+                     args[3], args[4], args[5]);
+      } else if (strcmp(cmd, "sleep") == 0) {
+        checkArguments(cmd, num_args, 1, lineCount);
+        execute_sleep(args[0]);
+      } else if (strcmp(cmd, "pinch") == 0) {
+        checkArguments(cmd, num_args, 10, lineCount);
+        execute_pinch(fd, device_flags, args[0], args[1], args[2],
+                      args[3], args[4], args[5], args[6], args[7], args[8],
+                      args[9]);
+      } else {
+        printf("Unrecognized command at line %d: '%s'\n", lineCount, cmd);
+        return 1;
+      }
     }
   }
   free(line);
