@@ -124,6 +124,29 @@ then a sleep for two seconds on a Galaxy Nexus in landscape mode might be:
     drag 200 200 600 200 10 100
     sleep 2000
 
+Comments can also be added, either on a line by itself, e.g.:
+
+    # This is a comment.
+
+Or at the end of the line:
+
+    sleep 2000 # This is a comment.
+
+Block comments are also allowed at various positions:
+
+    { This is a comment. } tap 175 630 2 200
+    tap 175 630 { This is a comment. } 2 200
+    tap 175 630 2 200 { This is a comment. }
+
+Block comments will also output their contents to adb stdout prefixed by "{}: ",
+and will be printed before the execution of the command:
+
+ {}: This is a comment.
+
+We can also chain commands together with ";", linking them this way:
+
+    { before tap } tap 175 630 2 200 ; { after tap } sleep 2000 # This is a comment.
+
 To execute a script file, simply copy it onto the device, and run orng utility
 against it as follows.
 
