@@ -280,9 +280,10 @@ uint32_t figure_out_events_device_reports(int fd) {
       device_name[0] = '\0';
     }
 
-    // the atmel touchscreen has a weird protocol which requires MT_SYN events
-    // to be sent after every touch
-    if(strcmp(device_name, "atmel-touchscreen") == 0) {
+    // some touchscreen devices expect MT_SYN events to be sent after every
+    // touch
+    if(strcmp(device_name, "atmel-touchscreen") == 0 ||
+       strcmp(device_name, "nvodm_touch") == 0) {
       device_classes |= INPUT_DEVICE_CLASS_TOUCH_MT_SYNC;
     }
     //}
