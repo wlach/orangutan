@@ -1,7 +1,7 @@
 Orangutan
 =========
 
-Orangutan is intended as replacement for Android's monkey/monkeyrunner tool,
+Orangutan is a replacement for Android's monkey/monkeyrunner tool,
 intended to overcome the following limitations:
 
 * Lack of ability to realistically simulate input events: it is difficult to
