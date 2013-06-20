@@ -35,5 +35,5 @@ $(PROGRAMS) : $$($$(@)_OBJECTS)
 	$(AGCC) $($@_LDFLAGS) $(ALDFLAGS) $(LDFLAGS) $^ -o $@
 
 push: orng
-	adb push orng /mnt/sdcard
+	adb push orng /mnt/sdcard/
 	adb shell su -c 'dd if=/mnt/sdcard/orng of=/data/orng; chmod 700 /data/orng; rm /mnt/sdcard/orng'
