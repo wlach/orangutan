@@ -1,7 +1,7 @@
 #!/bin/sh
 
 NDKROOT=$1
-UNAME=`uname | tr '[A-Z]' '[a-z]'`
+UNAME=`uname -sm | tr 'A-Z ' 'a-z-'`
 
 if [ ! $NDKROOT ]; then
    echo "Usage: $0 /path/to/android/ndk"

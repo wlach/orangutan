@@ -1,6 +1,6 @@
 NDKROOT=@NDKROOT@
 UNAME=@UNAME@
-AGCC=$(NDKROOT)/toolchains/arm-linux-androideabi-4.4.3/prebuilt/$(UNAME)-x86/bin/arm-linux-androideabi-gcc
+AGCC=$(NDKROOT)/toolchains/arm-linux-androideabi-4.4.3/prebuilt/$(UNAME)/bin/arm-linux-androideabi-gcc
 
 ACPPFLAGS := -DANDROID -DOS_ANDROID -DNDK_BUILD
 ACFLAGS := --sysroot $(NDKROOT)/platforms/android-9/arch-arm -fPIC -mandroid
@@ -35,5 +35,5 @@ $(PROGRAMS) : $$($$(@)_OBJECTS)
 	$(AGCC) $($@_LDFLAGS) $(ALDFLAGS) $(LDFLAGS) $^ -o $@
 
 push: orng
-	adb push orng /mnt/sdcard
+	adb push orng /mnt/sdcard/
 	adb shell su -c 'dd if=/mnt/sdcard/orng of=/data/orng; chmod 700 /data/orng; rm /mnt/sdcard/orng'
