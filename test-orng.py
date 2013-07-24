@@ -61,6 +61,7 @@ class DeviceController(object):
                                                         touch2_x2, touch2_y2,
                                                         numsteps,
                                                         duration)
+
     def get_cmd_events(self, cmd, args):
         if cmd == "scroll_down":
             cmdevents = self.get_scroll_events("down", *args)
@@ -78,6 +79,10 @@ class DeviceController(object):
             cmdevents = [self.get_tap_event(*args, times=2)]
         elif cmd == "pinch":
             cmdevents = [self.get_pinch_event(*args)]
+        elif cmd == "keydown":
+            cmdevents = ["keydown %s" % args[0]]
+        elif cmd == "keyup":
+            cmdevents = ["keyup %s" % args[0]]
         elif cmd == "sleep":
             if len(args):
                 cmdevents = [self.get_sleep_event(duration=args[0])]

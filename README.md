@@ -117,6 +117,14 @@ gestures. Currently the following are supported:
 
     sleep [duration in msec]
 
+* Key down: Simulates a press down of the specified key. Syntax:
+
+    keydown [key number]
+
+* Key up: Simulates a release of the specified key. Syntax:
+
+    keyup [key number]
+
 An example script file which fairly simulates a double tap, then a pan gesture,
 then a sleep for two seconds on a Galaxy Nexus in landscape mode might be:
 
