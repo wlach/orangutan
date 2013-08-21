@@ -22,10 +22,9 @@ indistinguishable from actual touch events. Parameters such as the duration
 of a press, speed of the swipe, etc. are inferred at *run time* by the Android
 system.
 
-An additional advantage of Orangutan is that it should run/work on *any* system
-which provides the /dev/input interface. This means that it should be possible
-to use Orangutan on Mozilla's B2G operating system (which reuses much of Android's
-kernel and userspace functionality).
+An additional advantage of Orangutan is that it works on *any* system which provides
+the /dev/input interface. In particular, this means you can use Orangutan on Mozilla's
+FirefoxOS operating system.
 
 # Requirements
 
