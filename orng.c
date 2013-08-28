@@ -16,12 +16,14 @@
 ** limitations under the License.
 */
 
+#include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdint.h>
 #include <fcntl.h>
 #include <sys/ioctl.h>
+#include <sys/time.h>
 #include <errno.h>
 #include <assert.h>
 
@@ -51,6 +53,69 @@ enum {
 };
 
 static int global_tracking_id = 1;
+
+enum {
+  ACTION_START = 0,
+  ACTION_END = 1
+};
+
+static int print_actions = 0;
+static int action_level = 0;
+
+void print_action(int start_end, const char *action_desc,
+                  const char *args_fmt, ...)
+{
+  const char *start_end_str;
+  struct timeval tv;
+  int current_arg = 0;
+  int i, n;
+  int arg;
+  va_list ap;
+  char *args_str = NULL, args_str2;
+  int args_str_size = 128;
+
+  if (!print_actions)
+    return;
+
+  gettimeofday(&tv, NULL);
+
+  if (start_end == ACTION_START)
+    start_end_str = "START";
+  else {
+    start_end_str = "END";
+    action_level--;
+  }
+
+  if (args_fmt) {
+    args_str = (char *)malloc(args_str_size);
+    assert(args_str);
+
+    va_start(ap, args_fmt);
+    n = vsnprintf(args_str, args_str_size, args_fmt, ap);
+    va_end(ap);
+    if (n == -1 || n >= args_str_size) {
+      args_str_size = n + 1;
+
+      args_str = (char *)realloc(args_str, args_str_size);
+
+      va_start(ap, args_fmt);
+      vsnprintf(args_str, args_str_size, args_fmt, ap);
+      va_end(ap);
+    }
+    printf("{ \"event\": \"%s\", \"type\": \"%s\", \"level\": %d, "
+           "\"time\": %ld.%06ld, \"params\": { %s } }\n", start_end_str,
+           action_desc, action_level, tv.tv_sec, tv.tv_usec, args_str);
+  } else {
+    printf("{ \"event\": \"%s\", \"type\": \"%s\", \"level\": %d, "
+           "\"time\": %ld.%06ld }\n", start_end_str, action_desc, action_level,
+           tv.tv_sec, tv.tv_usec);
+  }
+
+  if (start_end == ACTION_START)
+    action_level++;
+
+  free(args_str);
+}
 
 void write_event(int fd, int type, int code, int value)
 {
@@ -83,7 +148,9 @@ void write_event(int fd, int type, int code, int value)
 
 void execute_sleep(int duration_msec)
 {
+  print_action(ACTION_START, "sleep", "\"duration\": %d", duration_msec);
   usleep(duration_msec*1000);
+  print_action(ACTION_END, "sleep", NULL);
 }
 
 void add_mt_tracking_id(int fd, uint32_t device_flags, int id)
@@ -105,6 +172,7 @@ void remove_mt_tracking_id(int fd, uint32_t device_flags, int slot)
 
 void execute_press(int fd, uint32_t device_flags, int x, int y)
 {
+  print_action(ACTION_START, "press", "\"x\": %d, \"y\": %d", x, y);
   if (device_flags & INPUT_DEVICE_CLASS_TOUCH_MT) {
     write_event(fd, EV_ABS, ABS_MT_TOUCH_MAJOR, 32);
     write_event(fd, EV_ABS, ABS_MT_WIDTH_MAJOR, 4);
@@ -120,10 +188,12 @@ void execute_press(int fd, uint32_t device_flags, int x, int y)
     write_event(fd, EV_KEY, BTN_TOUCH, 1);
     write_event(fd, EV_SYN, SYN_REPORT, 0);
   }
+  print_action(ACTION_END, "press", NULL);
 }
 
 void execute_move(int fd, uint32_t device_flags, int x, int y)
 {
+  print_action(ACTION_START, "move", "\"x\": %d, \"y\": %d", x, y);
   if (device_flags & INPUT_DEVICE_CLASS_TOUCH_MT) {
     write_event(fd, EV_ABS, ABS_MT_TOUCH_MAJOR, 32);
     write_event(fd, EV_ABS, ABS_MT_WIDTH_MAJOR, 4);
@@ -138,17 +208,12 @@ void execute_move(int fd, uint32_t device_flags, int x, int y)
     write_event(fd, EV_ABS, ABS_Y, y);
     write_event(fd, EV_SYN, SYN_REPORT, 0);
   }
-}
-
-void execute_move_unsynced(int fd, uint32_t device_flags,
-                           int x, int y)
-{
-  write_event(fd, EV_ABS, ABS_MT_POSITION_X, x);
-  write_event(fd, EV_ABS, ABS_MT_POSITION_Y, y);
+  print_action(ACTION_END, "move", NULL);
 }
 
 void execute_release(int fd, uint32_t device_flags)
 {
+  print_action(ACTION_START, "release", NULL);
   if (device_flags & INPUT_DEVICE_CLASS_TOUCH_MT) {
     write_event(fd, EV_ABS, ABS_MT_PRESSURE,0);
     if (device_flags & INPUT_DEVICE_CLASS_TOUCH_MT_SYNC)
@@ -158,6 +223,7 @@ void execute_release(int fd, uint32_t device_flags)
     write_event(fd, EV_KEY, BTN_TOUCH, 0);
     write_event(fd, EV_SYN, SYN_REPORT, 0);
   }
+  print_action(ACTION_END, "release", NULL);
 }
 
 void execute_drag(int fd, uint32_t device_flags, int start_x,
@@ -167,6 +233,11 @@ void execute_drag(int fd, uint32_t device_flags, int start_x,
   int delta[] = {(end_x-start_x)/num_steps, (end_y-start_y)/num_steps};
   int sleeptime = duration_msec / num_steps;
   int i;
+
+  print_action(ACTION_START, "drag", "\"start_x\": %d, \"start_y\": %d, "
+               "\"end_x\": %d, \"end_y\": %d, \"num_steps\": %d, "
+               "\"duration_msec\": %d", start_x, start_y, end_x, end_y,
+               num_steps, duration_msec);
 
   // press
   execute_press(fd, device_flags, start_x, start_y);
@@ -182,12 +253,18 @@ void execute_drag(int fd, uint32_t device_flags, int start_x,
 
   // wait
   execute_sleep(100);
+
+  print_action(ACTION_END, "drag", NULL);
 }
 
 void execute_tap(int fd, uint32_t device_flags, int x, int y,
                  int num_times, int duration_msec)
 {
   int i;
+
+  print_action(ACTION_START, "tap", "\"x\": %d, \"y\": %d, "
+               "\"num_times\": %d, \"duration_msec\": %d", x, y, num_times,
+               duration_msec);
 
   for (i=0; i<num_times; i++) {
     // press
@@ -201,6 +278,8 @@ void execute_tap(int fd, uint32_t device_flags, int x, int y,
     // wait
     execute_sleep(50);
   }
+
+  print_action(ACTION_END, "tap", NULL);
 }
 
 void execute_pinch(int fd, uint32_t device_flags, int touch1_x1,
@@ -212,6 +291,15 @@ void execute_pinch(int fd, uint32_t device_flags, int touch1_x1,
   int delta2[] = {(touch2_x2-touch2_x1)/num_steps, (touch2_y2-touch2_y1)/num_steps};
   int sleeptime = duration_msec / num_steps;
   int i;
+
+  print_action(ACTION_START, "pinch",
+               "\"touch1_x1\": %d, \"touch1_y1\": %d, \"touch1_x2\": %d, "
+               "\"touch1_y2\": %d, \"touch2_x1\": %d, \"touch2_y1\": %d, "
+               "\"touch2_x2\": %d, \"touch2_y2\": %d, \"num_steps\": %d, "
+               "\"duration_msec\": %d",
+               touch1_x1, touch1_y1, touch1_x2, touch1_y2,
+               touch2_x1, touch2_y1, touch2_x2, touch2_y2,
+               num_steps, duration_msec);
 
   // press
   change_mt_slot(fd, device_flags, 0);
@@ -248,6 +336,7 @@ void execute_pinch(int fd, uint32_t device_flags, int touch1_x1,
   // wait
   execute_sleep(100);
 
+  print_action(ACTION_END, "pinch", NULL);
 }
 
 void execute_keyup(int fd, int key) {
@@ -274,7 +363,7 @@ uint32_t figure_out_events_device_reports(int fd) {
   // See if this is a touch pad.
   // Is this a new modern multi-touch driver?
   if (test_bit(ABS_MT_POSITION_X, abs_bitmask)
-          && test_bit(ABS_MT_POSITION_Y, abs_bitmask)) {
+      && test_bit(ABS_MT_POSITION_Y, abs_bitmask)) {
     // Some joysticks such as the PS3 controller report axes that conflict
     // with the ABS_MT range.  Try to confirm that the device really is
     // a touch screen.
@@ -297,14 +386,13 @@ uint32_t figure_out_events_device_reports(int fd) {
     }
     //}
   // Is this an old style single-touch driver?
-  } else if (test_bit(BTN_TOUCH, key_bitmask)
-          && test_bit(ABS_X, abs_bitmask)
-          && test_bit(ABS_Y, abs_bitmask)) {
-      device_classes |= INPUT_DEVICE_CLASS_TOUCH;
+  } else if ((test_bit(BTN_TOUCH, key_bitmask)
+              && test_bit(ABS_X, abs_bitmask)
+              && test_bit(ABS_Y, abs_bitmask))) {
+    device_classes |= INPUT_DEVICE_CLASS_TOUCH;
   }
 
   return device_classes;
-
 }
 
 int parseComment(const char *token, int lineCount)
@@ -340,17 +428,32 @@ int main(int argc, char *argv[])
   int i;
   int fd;
   int ret;
+  int c;
+  const char *device;
+  const char *script_file;
 
   int num_args = 0;
   int args[MAX_COMMAND_ARGS];
   char *line, *cmd, *arg;
 
-  if(argc != 3) {
-    fprintf(stderr, "Usage: %s <device> <script file>\n", argv[0]);
-    return 1;
+  while ((c = getopt (argc, argv, "t")) != -1) {
+    if (c=='t') {
+      print_actions = 1;
+    } else {
+      fprintf(stderr, "Unknown option: -%c\n", c);
+    }
   }
 
-  fd = open(argv[1], O_RDWR);
+  if((argc - optind) != 2) {
+    fprintf(stderr, "Usage: %s [options] <device> <script file>\n\n"
+            "Options:\n"
+            "  -t                  print event timings\n", argv[0]);
+    return 1;
+  }
+  device = argv[optind];
+  script_file = argv[optind + 1];
+
+  fd = open(device, O_RDWR);
   if(fd < 0) {
     fprintf(stderr, "could not open %s, %s\n", argv[optind], strerror(errno));
     return 1;
@@ -358,7 +461,7 @@ int main(int argc, char *argv[])
 
   uint32_t device_flags = figure_out_events_device_reports(fd);
 
-  FILE *f = fopen(argv[2], "r");
+  FILE *f = fopen(script_file, "r");
   if (!f) {
     printf("Unable to read file %s", argv[1]);
     return 1;
