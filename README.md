@@ -54,21 +54,13 @@ is enabled), run:
 
     make push
 
-If you want to use Orangutan with Eideticker, you'll need to install it in
-/system/xbin. Since this directory is normally readonly, you'll need to remount it.
-This can usually be done using something resembling the following procedure (assuming
-you already have a copy in /data):
-
-    adb shell su -c 'mount -o remount,rw /dev/block/mmcblk0p1 /system'
-    adb shell su -c 'cp /data/orng /system/xbin/orng'
-
-Exact instructions may vary depending on the phone you're working with and its
-partition layout.
-
 # Kernel support
 
 Orangutan comes with a Linux kernel module that lets you emulate arbitrary
-input devices. The use of the module is optional.
+input devices. This can be useful for using Orangutan with devices which lack
+a physical touchscreen, for example the pandaboard. If you just want to use
+Orangutan with a normal Android or FirefoxOS device, you shouldn't need to
+bother with this.
 
 A guide on how to build kernel modules for binary-only kernels is available
 at
@@ -157,14 +149,27 @@ We can also chain commands together with ";", linking them this way:
 To execute a script file, simply copy it onto the device, and run orng utility
 against it as follows.
 
-    /system/xbin/orng [device name] [script file]
+    /data/local/orng [device name] [script file]
 
 The device name varies per device, you can generally figure it out by running
 "getevent" on the device and seeing what device corresponds to the touch
-screen. On the Galaxy Nexus
+screen. On the Galaxy Nexus for example, we see the following output:
 
-For example, if your script file was '/mnt/sdcard/script' and you were
-running on a Galaxy Nexus, you would run the following command from an adb
-shell:
+    add device 1: /dev/input/event4
+      name:     "lightsensor-level"
+    add device 2: /dev/input/event3
+      name:     "proximity"
+    add device 3: /dev/input/event2
+      name:     "tuna-gpio-keypad"
+    add device 4: /dev/input/event0
+      name:     "barometer"
+    add device 5: /dev/input/event5
+      name:     "Tuna Headset Jack"
+    add device 6: /dev/input/event1
+      name:     "Melfas MMSxxx Touchscreen"
 
-    /system/xbin/orng /dev/input/event1 /mnt/sdcard/script
+We can guess the /dev/input/event1 is the touchscreen by its description.
+Thus, if your script file was stored in '/mnt/sdcard/script' you would run the
+following command from an adb shell:
+
+    /data/local/orng /dev/input/event1 /mnt/sdcard/script
