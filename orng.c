@@ -48,10 +48,7 @@ enum {
   INPUT_DEVICE_CLASS_TOUCH_MT      = 0x00000010,
 
   /* The input device is a multi-touch touchscreen and needs MT_SYNC. */
-  INPUT_DEVICE_CLASS_TOUCH_MT_SYNC = 0x00000200,
-
-  /* The device may need an initial BTN_DOWN event to "wake up" */
-  INPUT_DEVICE_CLASS_NEEDS_BTN_DOWN_WAKEUP = 0x00001000
+  INPUT_DEVICE_CLASS_TOUCH_MT_SYNC = 0x00000200
 };
 
 static int global_tracking_id = 1;
@@ -391,11 +388,6 @@ uint32_t figure_out_events_device_reports(int fd) {
       device_classes |= INPUT_DEVICE_CLASS_TOUCH_MT_SYNC;
     }
 
-    // some devices need an initial btn down event to "wake up"
-    if (strcmp(device_name, "cyttsp-i2c") == 0) {
-      device_classes |= INPUT_DEVICE_CLASS_NEEDS_BTN_DOWN_WAKEUP;
-    }
-
   // Is this an old style single-touch driver?
   } else if ((test_bit(BTN_TOUCH, key_bitmask)
               && test_bit(ABS_X, abs_bitmask)
@@ -471,10 +463,6 @@ int main(int argc, char *argv[])
   }
 
   uint32_t device_flags = figure_out_events_device_reports(fd);
-
-  if (device_flags & INPUT_DEVICE_CLASS_NEEDS_BTN_DOWN_WAKEUP) {
-    write_event(fd, EV_KEY, BTN_TOUCH, 1);
-  }
 
   FILE *f = fopen(script_file, "r");
   if (!f) {
