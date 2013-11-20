@@ -176,13 +176,14 @@ void execute_press(int fd, uint32_t device_flags, int x, int y)
 {
   print_action(ACTION_START, "press", "\"x\": %d, \"y\": %d", x, y);
   if (device_flags & INPUT_DEVICE_CLASS_TOUCH_MT) {
-    write_event(fd, EV_ABS, ABS_MT_TOUCH_MAJOR, 32);
-    write_event(fd, EV_ABS, ABS_MT_WIDTH_MAJOR, 4);
-    write_event(fd, EV_ABS, ABS_MT_PRESSURE, 90);
     write_event(fd, EV_ABS, ABS_MT_POSITION_X, x);
     write_event(fd, EV_ABS, ABS_MT_POSITION_Y, y);
+    write_event(fd, EV_ABS, ABS_MT_PRESSURE, 127);
+    write_event(fd, EV_ABS, ABS_MT_TOUCH_MAJOR, 127);
+    write_event(fd, EV_ABS, ABS_MT_WIDTH_MAJOR, 4);
     if (device_flags & INPUT_DEVICE_CLASS_TOUCH_MT_SYNC)
       write_event(fd, EV_SYN, SYN_MT_REPORT, 0);
+    write_event(fd, EV_KEY, BTN_TOUCH, 1);
     write_event(fd, EV_SYN, SYN_REPORT, 0);
   } else if (device_flags & INPUT_DEVICE_CLASS_TOUCH) {
     write_event(fd, EV_ABS, ABS_X, x);
@@ -197,11 +198,11 @@ void execute_move(int fd, uint32_t device_flags, int x, int y)
 {
   print_action(ACTION_START, "move", "\"x\": %d, \"y\": %d", x, y);
   if (device_flags & INPUT_DEVICE_CLASS_TOUCH_MT) {
-    write_event(fd, EV_ABS, ABS_MT_TOUCH_MAJOR, 32);
-    write_event(fd, EV_ABS, ABS_MT_WIDTH_MAJOR, 4);
     write_event(fd, EV_ABS, ABS_MT_POSITION_X, x);
     write_event(fd, EV_ABS, ABS_MT_POSITION_Y, y);
-    write_event(fd, EV_ABS, ABS_MT_PRESSURE, 90);
+    write_event(fd, EV_ABS, ABS_MT_PRESSURE, 127);
+    write_event(fd, EV_ABS, ABS_MT_TOUCH_MAJOR, 127);
+    write_event(fd, EV_ABS, ABS_MT_WIDTH_MAJOR, 4);
     if (device_flags & INPUT_DEVICE_CLASS_TOUCH_MT_SYNC)
       write_event(fd, EV_SYN, SYN_MT_REPORT, 0);
     write_event(fd, EV_SYN, SYN_REPORT, 0);
@@ -218,8 +219,10 @@ void execute_release(int fd, uint32_t device_flags)
   print_action(ACTION_START, "release", NULL);
   if (device_flags & INPUT_DEVICE_CLASS_TOUCH_MT) {
     write_event(fd, EV_ABS, ABS_MT_PRESSURE,0);
+    write_event(fd, EV_ABS, ABS_MT_TOUCH_MAJOR, 0);
     if (device_flags & INPUT_DEVICE_CLASS_TOUCH_MT_SYNC)
       write_event(fd, EV_SYN, SYN_MT_REPORT, 0);
+    write_event(fd, EV_KEY, BTN_TOUCH, 0);
     write_event(fd, EV_SYN, SYN_REPORT, 0);
   } else if (device_flags & INPUT_DEVICE_CLASS_TOUCH) {
     write_event(fd, EV_KEY, BTN_TOUCH, 0);
@@ -383,7 +386,8 @@ uint32_t figure_out_events_device_reports(int fd) {
     // touch
     if(strcmp(device_name, "atmel-touchscreen") == 0 ||
        strcmp(device_name, "nvodm_touch") == 0 ||
-       strcmp(device_name, "elan-touchscreen") == 0) {
+       strcmp(device_name, "elan-touchscreen") == 0 ||
+       strcmp(device_name, "ft5x06_ts") == 0) {
       device_classes |= INPUT_DEVICE_CLASS_TOUCH_MT_SYNC;
     }
 
