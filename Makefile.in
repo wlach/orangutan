@@ -1,6 +1,6 @@
 NDKROOT=@NDKROOT@
 UNAME=@UNAME@
-AGCC=$(NDKROOT)/toolchains/arm-linux-androideabi-4.4.3/prebuilt/$(UNAME)/bin/arm-linux-androideabi-gcc
+AGCC=$(NDKROOT)/toolchains/arm-linux-androideabi-4.8/prebuilt/$(UNAME)/bin/arm-linux-androideabi-gcc
 
 ACPPFLAGS := -DANDROID -DOS_ANDROID -DNDK_BUILD
 ACFLAGS := --sysroot $(NDKROOT)/platforms/android-9/arch-arm -fPIC -mandroid
