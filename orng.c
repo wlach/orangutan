@@ -466,7 +466,7 @@ int main(int argc, char *argv[])
 
   FILE *f = fopen(script_file, "r");
   if (!f) {
-    printf("Unable to read file %s", argv[1]);
+    printf("Unable to read file %s", script_file);
     return 1;
   }
 
