@@ -458,7 +458,7 @@ int main(int argc, char *argv[])
 
   fd = open(device, O_RDWR);
   if(fd < 0) {
-    fprintf(stderr, "could not open %s, %s\n", argv[optind], strerror(errno));
+    fprintf(stderr, "could not open %s, %s\n", device, strerror(errno));
     return 1;
   }
 
