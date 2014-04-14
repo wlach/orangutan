@@ -152,27 +152,16 @@ void execute_sleep(int duration_msec)
   print_action(ACTION_END, "sleep", NULL);
 }
 
-void add_mt_tracking_id(int fd, uint32_t device_flags, int id)
-{
-  write_event(fd, EV_ABS, ABS_MT_TRACKING_ID, id);
-}
-
 void change_mt_slot(int fd, uint32_t device_flags, int slot)
 {
   write_event(fd, EV_ABS, ABS_MT_SLOT, slot);
-}
-
-void remove_mt_tracking_id(int fd, uint32_t device_flags, int slot)
-{
-  write_event(fd, EV_ABS, ABS_MT_SLOT, slot);
-  write_event(fd, EV_ABS, ABS_MT_TRACKING_ID, -1);
-  write_event(fd, EV_SYN, SYN_REPORT, 0);
 }
 
 void execute_press(int fd, uint32_t device_flags, int x, int y)
 {
   print_action(ACTION_START, "press", "\"x\": %d, \"y\": %d", x, y);
   if (device_flags & INPUT_DEVICE_CLASS_TOUCH_MT) {
+    write_event(fd, EV_ABS, ABS_MT_TRACKING_ID, global_tracking_id++);
     write_event(fd, EV_ABS, ABS_MT_POSITION_X, x);
     write_event(fd, EV_ABS, ABS_MT_POSITION_Y, y);
     write_event(fd, EV_ABS, ABS_MT_PRESSURE, 127);
@@ -215,8 +204,7 @@ void execute_release(int fd, uint32_t device_flags)
 {
   print_action(ACTION_START, "release", NULL);
   if (device_flags & INPUT_DEVICE_CLASS_TOUCH_MT) {
-    write_event(fd, EV_ABS, ABS_MT_PRESSURE,0);
-    write_event(fd, EV_ABS, ABS_MT_TOUCH_MAJOR, 0);
+    write_event(fd, EV_ABS, ABS_MT_TRACKING_ID, -1);
     if (device_flags & INPUT_DEVICE_CLASS_TOUCH_MT_SYNC)
       write_event(fd, EV_SYN, SYN_MT_REPORT, 0);
     write_event(fd, EV_KEY, BTN_TOUCH, 0);
@@ -305,11 +293,9 @@ void execute_pinch(int fd, uint32_t device_flags, int touch1_x1,
 
   // press
   change_mt_slot(fd, device_flags, 0);
-  add_mt_tracking_id(fd, device_flags, global_tracking_id++);
   execute_press(fd, device_flags, touch1_x1, touch1_y1);
 
   change_mt_slot(fd, device_flags, 1);
-  add_mt_tracking_id(fd, device_flags, global_tracking_id++);
   execute_press(fd, device_flags, touch2_x1, touch2_y1);
 
   // drag
@@ -331,9 +317,6 @@ void execute_pinch(int fd, uint32_t device_flags, int touch1_x1,
 
   change_mt_slot(fd, device_flags, 1);
   execute_release(fd, device_flags);
-
-  remove_mt_tracking_id(fd, device_flags, 0);
-  remove_mt_tracking_id(fd, device_flags, 1);
 
   // wait
   execute_sleep(100);
