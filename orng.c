@@ -415,6 +415,8 @@ int main(int argc, char *argv[])
   int fd;
   int ret;
   int c;
+  int argcount;
+  int print_device_diagnostics = 0;
   const char *device;
   const char *script_file;
 
@@ -422,17 +424,22 @@ int main(int argc, char *argv[])
   int args[MAX_COMMAND_ARGS];
   char *line, *cmd, *arg;
 
-  while ((c = getopt (argc, argv, "t")) != -1) {
+  while ((c = getopt (argc, argv, "it")) != -1) {
     if (c=='t') {
       print_actions = 1;
+    } else if (c=='i') {
+      print_device_diagnostics = 1;
     } else {
       fprintf(stderr, "Unknown option: -%c\n", c);
     }
   }
 
-  if((argc - optind) != 2) {
-    fprintf(stderr, "Usage: %s [options] <device> <script file>\n\n"
+  argcount = (argc - optind);
+  if ((print_device_diagnostics && argcount != 1) ||
+      (!print_device_diagnostics && argcount != 2)) {
+    fprintf(stderr, "Usage: %s [options] <device> [script file]\n\n"
             "Options:\n"
+            "  -i                  print device information\n"
             "  -t                  print event timings\n", argv[0]);
     return 1;
   }
@@ -446,6 +453,21 @@ int main(int argc, char *argv[])
   }
 
   uint32_t device_flags = figure_out_events_device_reports(fd);
+
+  if (print_device_diagnostics) {
+    if (device_flags & INPUT_DEVICE_CLASS_TOUCH) {
+      printf("INPUT_DEVICE_CLASS_TOUCH\n");
+    }
+    if (device_flags & INPUT_DEVICE_CLASS_TOUCH_MT) {
+      printf("INPUT_DEVICE_CLASS_TOUCH_MT\n");
+    }
+    if (device_flags & INPUT_DEVICE_CLASS_TOUCH_MT_SYNC) {
+      printf("INPUT_DEVICE_CLASS_TOUCH_MT_SYNC\n");
+    }
+
+    // just exit
+    return 0;
+  }
 
   FILE *f = fopen(script_file, "r");
   if (!f) {
