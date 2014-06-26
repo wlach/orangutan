@@ -8,11 +8,12 @@ import tempfile
 
 class DeviceController(object):
 
-    def __init__(self, dimensions, swipe_padding, input_device):
+    def __init__(self, dimensions, swipe_padding, input_device, orng_path):
         self.dimensions = dimensions
         self.swipe_padding = swipe_padding
         self.dm = mozdevice.DeviceManagerADB()
         self.input_device = input_device
+        self.orng_path = orng_path
 
     def get_drag_event(self, touchstart_x1, touchstart_y1, touchend_x1,
                        touchend_y1, duration=1000, num_steps=5):
@@ -101,7 +102,7 @@ class DeviceController(object):
             remotefilename = os.path.join(self.dm.getDeviceRoot(),
                                           os.path.basename(f.name))
             self.dm.pushFile(f.name, remotefilename)
-            self.dm.shellCheckOutput(['/data/local/orng', self.input_device,
+            self.dm.shellCheckOutput([self.orng_path, self.input_device,
                                    remotefilename])
             self.dm.removeFile(remotefilename)
 
@@ -122,12 +123,15 @@ def main(args=sys.argv[1:]):
     parser.add_option("--input-device", dest="input_device",
                       help="input device to use (default: /dev/input/event2)",
                       default="/dev/input/event2")
+    parser.add_option("--orng-path", dest="orng_path",
+                      help="path to orng executable (default: /data/local/orng)",
+                      default="/data/local/orng")
 
     options, args = parser.parse_args()
 
     controller = DeviceController(eval(options.device_dimensions),
                                   eval(options.swipe_padding),
-                                  options.input_device)
+                                  options.input_device, options.orng_path)
 
     print "READY"
     sys.stdout.flush()
