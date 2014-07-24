@@ -216,13 +216,23 @@ void execute_release(int fd, uint32_t device_flags)
   print_action(ACTION_END, "release", NULL);
 }
 
+double timediff_msec(struct timespec *t1, struct timespec *t2)
+{
+  return (((t2->tv_sec - t1->tv_sec) * 1000.0) +
+          1e-6 * (t2->tv_nsec - t1->tv_nsec));
+}
+
 void execute_drag(int fd, uint32_t device_flags, int start_x,
                   int start_y, int end_x, int end_y, int num_steps,
                   int duration_msec)
 {
   int delta[] = {(end_x-start_x)/num_steps, (end_y-start_y)/num_steps};
-  int sleeptime = duration_msec / num_steps;
+  double desired_interval_msec, avg_event_dispatch_time_msec;
+  struct timespec start_time, current_time, time_before_last_move;
   int i;
+
+  clock_gettime(CLOCK_MONOTONIC, &start_time);
+  double start_nsecs = (double) (start_time.tv_sec * (1000*1000)) + start_time.tv_nsec;
 
   print_action(ACTION_START, "drag", "\"start_x\": %d, \"start_y\": %d, "
                "\"end_x\": %d, \"end_y\": %d, \"num_steps\": %d, "
@@ -230,11 +240,22 @@ void execute_drag(int fd, uint32_t device_flags, int start_x,
                num_steps, duration_msec);
 
   // press
+  clock_gettime(CLOCK_MONOTONIC, &time_before_last_move);
   execute_press(fd, device_flags, start_x, start_y);
 
   // drag
+  desired_interval_msec = duration_msec / num_steps;
   for (i=0; i<num_steps; i++) {
-    execute_sleep(sleeptime);
+    clock_gettime(CLOCK_MONOTONIC, &current_time);
+    avg_event_dispatch_time_msec = ((avg_event_dispatch_time_msec * i) +
+                                    timediff_msec(&time_before_last_move,
+                                                  &current_time)) / i;
+    if (desired_interval_msec > 0 &&
+        avg_event_dispatch_time_msec < desired_interval_msec) {
+      execute_sleep(desired_interval_msec - avg_event_dispatch_time_msec);
+    }
+
+    memcpy(&time_before_last_move, &current_time, sizeof(struct timespec));
     execute_move(fd, device_flags, start_x+delta[0]*i, start_y+delta[1]*i);
   }
 
