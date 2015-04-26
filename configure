@@ -1,11 +1,48 @@
 #!/bin/sh
 
-NDKROOT=$1
+arch=armv7-a
+fpu=neon
+float_abi=softfp
+
+show_usage()
+{
+      echo 'usage:'
+      echo '  configure --ndkroot=NDK_INSTALL_PATH [--arch=ARCHITECTURE] [--fpu=FPU_UNIT]'
+      echo '    [--float-abi=FLOAT_ABI]'
+      exit 1
+}
+
+# process command line options
+while test $# -ge 1
+do
+case "$1" in
+    -h* | --help)
+	show_usage
+        exit 0 ;;
+    --ndkroot=*) ndkroot=`echo $1 | sed 's/.*=//'`; shift ;;
+    --arch=*) arch=`echo $1 | sed 's/.*=//'`; shift ;;
+    --fpu=*) fpu=`echo $1 | sed 's/.*=//'`; shift ;;
+    --float-abi=*) float_abi=`echo $1 | sed 's/.*=//'`; shift ;;
+    *)
+      echo "unknown option: $1"
+      echo "$0 --help for help"
+      exit 2
+esac
+done
+
 UNAME=`uname -sm | tr 'A-Z ' 'a-z-'`
 
-if [ ! $NDKROOT ]; then
-   echo "Usage: $0 /path/to/android/ndk"
+if [ ! $ndkroot ]; then
+   show_usage
    exit 1
 fi
+NDKROOT=$ndkroot
+ARCH=$arch
+FPU=$fpu
+FLOAT_ABI=$float_abi
 
-sed -e s,@NDKROOT@,$NDKROOT,g Makefile.in | sed -e s,@UNAME@,$UNAME,g > Makefile
+sed -e s,@NDKROOT@,$NDKROOT,g Makefile.in | 
+sed -e s,@UNAME@,$UNAME,g | 
+sed -e s,@ARCH@,$ARCH,g | 
+sed -e s,@FPU@,$FPU,g | 
+sed -e s,@FLOAT_ABI@,$FLOAT_ABI,g > Makefile

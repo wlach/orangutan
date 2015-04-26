@@ -40,13 +40,23 @@ FirefoxOS operating system.
 Assuming you have installed the Android NDK, you can configure and build
 Orangutan by running:
 
-    ./configure $PATH_TO_ANDROID_NDK
+    ./configure --ndkroot=$PATH_TO_ANDROID_NDK
     make
+
+Furthermore, you can also specify the target CPU (--arch=$TARGET_CPU), the Floating Point Unit 
+(--fpu=$FPU) and the Float ABI (--float-abi=$FLOAT_ABI). If you don't specify these values, 
+by default, target CPU is set to armv7-a, FPU is set to neon and the Float ABI is set to softfp. 
+These are the most common values for the hardware found nowadays.
 
 For example, on my machine I downloaded and extracted the NDK to
 $HOME/opt/android-ndk-r6. So In my case I would run:
 
-    ./configure $HOME/opt/android-ndk-r6
+    ./configure --ndkroot=$HOME/opt/android-ndk-r6
+    make
+
+But if I wanted to target a new armv7 device with a non-NEON FPU, I should run:
+
+    ./configure --ndkroot=$HOME/opt/android-ndk-r6 --arch=armv7 --fpu=vfpv3
     make
 
 To install on your device (assuming it's connected via USB and developer mode
