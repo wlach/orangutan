@@ -1,9 +1,13 @@
 NDKROOT=@NDKROOT@
 UNAME=@UNAME@
+ARCH=@ARCH@
+FPU=@FPU@
+FLOAT_ABI=@FLOAT_ABI@
+
 AGCC=$(NDKROOT)/toolchains/arm-linux-androideabi-4.8/prebuilt/$(UNAME)/bin/arm-linux-androideabi-gcc
 
 ACPPFLAGS := -DANDROID -DOS_ANDROID -DNDK_BUILD
-ACFLAGS := --sysroot $(NDKROOT)/platforms/android-9/arch-arm -fPIC -mandroid
+ACFLAGS := -march=$(ARCH) -mfpu=$(FPU) -mfloat-abi=$(FLOAT_ABI) --sysroot $(NDKROOT)/platforms/android-9/arch-arm -fPIC -mandroid
 ALDFLAGS :=--sysroot $(NDKROOT)/platforms/android-9/arch-arm -fPIC -mandroid
 
 PROGRAMS := mkdevinfo \
