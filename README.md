@@ -126,6 +126,10 @@ gestures. Currently the following are supported:
 
     keyup [key number]
 
+* Reset: Send events to reset kernel cached values to 0. Syntax:
+
+    reset
+
 An example script file which fairly simulates a double tap, then a pan gesture,
 then a sleep for two seconds on a Galaxy Nexus in landscape mode might be:
 

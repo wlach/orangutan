@@ -353,6 +353,21 @@ void execute_keydown(int fd, int key) {
   write_event(fd, EV_KEY, key, 1);
 }
 
+void execute_reset(int fd, uint32_t device_flags) {
+  print_action(ACTION_START, "reset", NULL);
+  if (device_flags & INPUT_DEVICE_CLASS_TOUCH_MT) {
+    write_event(fd, EV_ABS, ABS_MT_POSITION_X, 0);
+    write_event(fd, EV_ABS, ABS_MT_POSITION_Y, 0);
+    write_event(fd, EV_ABS, ABS_MT_PRESSURE, 0);
+    write_event(fd, EV_ABS, ABS_MT_TOUCH_MAJOR, 0);
+    write_event(fd, EV_ABS, ABS_MT_WIDTH_MAJOR, 0);
+  } else if (device_flags & INPUT_DEVICE_CLASS_TOUCH) {
+    write_event(fd, EV_ABS, ABS_X, 0);
+    write_event(fd, EV_ABS, ABS_Y, 0);
+  }
+  print_action(ACTION_END, "reset", NULL);
+}
+
 uint32_t figure_out_events_device_reports(int fd) {
 
   uint32_t device_classes = 0;
@@ -563,6 +578,9 @@ int main(int argc, char *argv[])
       } else if (strcmp(cmd, "keydown") == 0) {
         checkArguments(cmd, num_args, 1, lineCount);
         execute_keydown(fd, args[0]);
+      } else if (strcmp(cmd, "reset") == 0) {
+        checkArguments(cmd, num_args, 0, lineCount);
+        execute_reset(fd, device_flags);
       } else {
         printf("Unrecognized command at line %d: '%s'\n", lineCount, cmd);
         return 1;
