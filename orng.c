@@ -51,7 +51,8 @@ enum {
   INPUT_DEVICE_CLASS_TOUCH_MT_SYNC = 0x00000200
 };
 
-static int global_tracking_id = 1;
+static const int first_tracking_id = 0;
+static const int second_tracking_id = 1;
 
 enum {
   ACTION_START = 0,
@@ -161,15 +162,15 @@ void execute_press(int fd, uint32_t device_flags, int x, int y)
 {
   print_action(ACTION_START, "press", "\"x\": %d, \"y\": %d", x, y);
   if (device_flags & INPUT_DEVICE_CLASS_TOUCH_MT) {
-    write_event(fd, EV_ABS, ABS_MT_TRACKING_ID, global_tracking_id++);
+    write_event(fd, EV_ABS, ABS_MT_TRACKING_ID, first_tracking_id);
     write_event(fd, EV_ABS, ABS_MT_POSITION_X, x);
     write_event(fd, EV_ABS, ABS_MT_POSITION_Y, y);
     write_event(fd, EV_ABS, ABS_MT_PRESSURE, 127);
-    write_event(fd, EV_ABS, ABS_MT_TOUCH_MAJOR, 127);
-    write_event(fd, EV_ABS, ABS_MT_WIDTH_MAJOR, 4);
+    write_event(fd, EV_ABS, ABS_MT_TOUCH_MAJOR, 200);
+    write_event(fd, EV_ABS, ABS_MT_WIDTH_MAJOR, 1);
     if (device_flags & INPUT_DEVICE_CLASS_TOUCH_MT_SYNC)
       write_event(fd, EV_SYN, SYN_MT_REPORT, 0);
-    write_event(fd, EV_KEY, BTN_TOUCH, 1);
+    // write_event(fd, EV_KEY, BTN_TOUCH, 1);
     write_event(fd, EV_SYN, SYN_REPORT, 0);
   } else if (device_flags & INPUT_DEVICE_CLASS_TOUCH) {
     write_event(fd, EV_ABS, ABS_X, x);
@@ -184,11 +185,12 @@ void execute_move(int fd, uint32_t device_flags, int x, int y)
 {
   print_action(ACTION_START, "move", "\"x\": %d, \"y\": %d", x, y);
   if (device_flags & INPUT_DEVICE_CLASS_TOUCH_MT) {
+    write_event(fd, EV_ABS, ABS_MT_TRACKING_ID, first_tracking_id);
     write_event(fd, EV_ABS, ABS_MT_POSITION_X, x);
     write_event(fd, EV_ABS, ABS_MT_POSITION_Y, y);
     write_event(fd, EV_ABS, ABS_MT_PRESSURE, 127);
-    write_event(fd, EV_ABS, ABS_MT_TOUCH_MAJOR, 127);
-    write_event(fd, EV_ABS, ABS_MT_WIDTH_MAJOR, 4);
+    write_event(fd, EV_ABS, ABS_MT_TOUCH_MAJOR, 200);
+    write_event(fd, EV_ABS, ABS_MT_WIDTH_MAJOR, 1);
     if (device_flags & INPUT_DEVICE_CLASS_TOUCH_MT_SYNC)
       write_event(fd, EV_SYN, SYN_MT_REPORT, 0);
     write_event(fd, EV_SYN, SYN_REPORT, 0);
@@ -200,14 +202,67 @@ void execute_move(int fd, uint32_t device_flags, int x, int y)
   print_action(ACTION_END, "move", NULL);
 }
 
+void execute_mt_press(int fd, uint32_t device_flags, int x1, int y1, int x2, int y2)
+{
+  print_action(ACTION_START, "mt_press", "\"x1\": %d, \"y1\": %d", "\"x2\": %d, \"y2\": %d", x1, y1, x2, y2);
+  if (device_flags & INPUT_DEVICE_CLASS_TOUCH_MT) {
+    write_event(fd, EV_ABS, ABS_MT_TRACKING_ID, first_tracking_id);
+    write_event(fd, EV_ABS, ABS_MT_POSITION_X, x1);
+    write_event(fd, EV_ABS, ABS_MT_POSITION_Y, y1);
+    write_event(fd, EV_ABS, ABS_MT_PRESSURE, 127);
+    write_event(fd, EV_ABS, ABS_MT_TOUCH_MAJOR, 200);
+    write_event(fd, EV_ABS, ABS_MT_WIDTH_MAJOR, 1);
+    if (device_flags & INPUT_DEVICE_CLASS_TOUCH_MT_SYNC)
+      write_event(fd, EV_SYN, SYN_MT_REPORT, 0);
+    // write_event(fd, EV_KEY, BTN_TOUCH, 1);
+    write_event(fd, EV_ABS, ABS_MT_TRACKING_ID, second_tracking_id);
+    write_event(fd, EV_ABS, ABS_MT_POSITION_X, x2);
+    write_event(fd, EV_ABS, ABS_MT_POSITION_Y, y2);
+    write_event(fd, EV_ABS, ABS_MT_PRESSURE, 127);
+    write_event(fd, EV_ABS, ABS_MT_TOUCH_MAJOR, 200);
+    write_event(fd, EV_ABS, ABS_MT_WIDTH_MAJOR, 1);
+    if (device_flags & INPUT_DEVICE_CLASS_TOUCH_MT_SYNC)
+      write_event(fd, EV_SYN, SYN_MT_REPORT, 0);
+    // write_event(fd, EV_KEY, BTN_TOUCH, 1);
+    write_event(fd, EV_SYN, SYN_REPORT, 0);
+  }
+  print_action(ACTION_END, "mt_press", NULL);
+}
+
+void execute_mt_move(int fd, uint32_t device_flags, int x1, int y1, int x2, int y2)
+{
+  print_action(ACTION_START, "mt_move", "\"x1\": %d, \"y1\": %d", "\"x2\": %d, \"y2\": %d", x1, y1, x2, y2);
+  if (device_flags & INPUT_DEVICE_CLASS_TOUCH_MT) {
+    write_event(fd, EV_ABS, ABS_MT_TRACKING_ID, first_tracking_id);
+    write_event(fd, EV_ABS, ABS_MT_POSITION_X, x1);
+    write_event(fd, EV_ABS, ABS_MT_POSITION_Y, y1);
+    write_event(fd, EV_ABS, ABS_MT_PRESSURE, 127);
+    write_event(fd, EV_ABS, ABS_MT_TOUCH_MAJOR, 200);
+    write_event(fd, EV_ABS, ABS_MT_WIDTH_MAJOR, 1);
+    if (device_flags & INPUT_DEVICE_CLASS_TOUCH_MT_SYNC)
+      write_event(fd, EV_SYN, SYN_MT_REPORT, 0);
+    write_event(fd, EV_ABS, ABS_MT_TRACKING_ID, second_tracking_id);
+    write_event(fd, EV_ABS, ABS_MT_POSITION_X, x2);
+    write_event(fd, EV_ABS, ABS_MT_POSITION_Y, y2);
+    write_event(fd, EV_ABS, ABS_MT_PRESSURE, 127);
+    write_event(fd, EV_ABS, ABS_MT_TOUCH_MAJOR, 200);
+    write_event(fd, EV_ABS, ABS_MT_WIDTH_MAJOR, 1);
+    if (device_flags & INPUT_DEVICE_CLASS_TOUCH_MT_SYNC)
+      write_event(fd, EV_SYN, SYN_MT_REPORT, 0);
+    write_event(fd, EV_SYN, SYN_REPORT, 0);
+  }
+  print_action(ACTION_END, "mt_move", NULL);
+}
+
 void execute_release(int fd, uint32_t device_flags)
 {
   print_action(ACTION_START, "release", NULL);
   if (device_flags & INPUT_DEVICE_CLASS_TOUCH_MT) {
-    write_event(fd, EV_ABS, ABS_MT_TRACKING_ID, -1);
+    // write_event(fd, EV_ABS, ABS_MT_TRACKING_ID, -1);
     if (device_flags & INPUT_DEVICE_CLASS_TOUCH_MT_SYNC)
       write_event(fd, EV_SYN, SYN_MT_REPORT, 0);
-    write_event(fd, EV_KEY, BTN_TOUCH, 0);
+    write_event(fd, EV_ABS, ABS_MT_TOUCH_MAJOR, 0);
+    // write_event(fd, EV_KEY, BTN_TOUCH, 0);
     write_event(fd, EV_SYN, SYN_REPORT, 0);
   } else if (device_flags & INPUT_DEVICE_CLASS_TOUCH) {
     write_event(fd, EV_KEY, BTN_TOUCH, 0);
@@ -313,31 +368,31 @@ void execute_pinch(int fd, uint32_t device_flags, int touch1_x1,
                num_steps, duration_msec);
 
   // press
-  change_mt_slot(fd, device_flags, 0);
-  execute_press(fd, device_flags, touch1_x1, touch1_y1);
+  // change_mt_slot(fd, device_flags, 0);
+  execute_mt_press(fd, device_flags, touch1_x1, touch1_y1, touch2_x1, touch2_y1);
 
-  change_mt_slot(fd, device_flags, 1);
-  execute_press(fd, device_flags, touch2_x1, touch2_y1);
+  // change_mt_slot(fd, device_flags, 1);
+  // execute_press(fd, device_flags, touch2_x1, touch2_y1);
 
   // drag
   for (i=0; i<num_steps; i++) {
     execute_sleep(sleeptime);
 
-    change_mt_slot(fd, device_flags, 0);
-    execute_move(fd, device_flags, touch1_x1+delta1[0]*i, touch1_y1+delta1[1]*i);
+    // change_mt_slot(fd, device_flags, 0);
+    execute_mt_move(fd, device_flags, touch1_x1+delta1[0]*i, touch1_y1+delta1[1]*i, touch2_x1+delta2[0]*i, touch2_y1+delta2[1]*i);
 
-    change_mt_slot(fd, device_flags, 1);
-    execute_move(fd, device_flags, touch2_x1+delta2[0]*i, touch2_y1+delta2[1]*i);
+    // change_mt_slot(fd, device_flags, 1);
+    // execute_move(fd, device_flags, touch2_x1+delta2[0]*i, touch2_y1+delta2[1]*i);
 
     //write_event(fd, EV_SYN, SYN_REPORT, 0);
   }
 
   // release
-  change_mt_slot(fd, device_flags, 0);
+  // change_mt_slot(fd, device_flags, 0);
   execute_release(fd, device_flags);
 
-  change_mt_slot(fd, device_flags, 1);
-  execute_release(fd, device_flags);
+  // change_mt_slot(fd, device_flags, 1);
+  // execute_release(fd, device_flags);
 
   // wait
   execute_sleep(100);
@@ -347,10 +402,12 @@ void execute_pinch(int fd, uint32_t device_flags, int touch1_x1,
 
 void execute_keyup(int fd, int key) {
   write_event(fd, EV_KEY, key, 0);
+  write_event(fd, EV_SYN, SYN_REPORT, 0);
 }
 
 void execute_keydown(int fd, int key) {
   write_event(fd, EV_KEY, key, 1);
+  write_event(fd, EV_SYN, SYN_REPORT, 0);
 }
 
 void execute_reset(int fd, uint32_t device_flags) {
@@ -403,6 +460,8 @@ uint32_t figure_out_events_device_reports(int fd) {
     if(strcmp(device_name, "atmel-touchscreen") == 0 ||
        strcmp(device_name, "nvodm_touch") == 0 ||
        strcmp(device_name, "elan-touchscreen") == 0 ||
+       // InFocus New Tab F1 touchscreen devices
+       strcmp(device_name, "ft5x_ts") == 0 ||
        strcmp(device_name, "ft5x06_ts") == 0) {
       device_classes |= INPUT_DEVICE_CLASS_TOUCH_MT_SYNC;
     }
